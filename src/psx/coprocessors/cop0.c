@@ -10,10 +10,11 @@
 //
 
 void cop0_Handle(CPU *cpu) {
+	log_Debug("COPROCESSOR 0 CALLED");
 	uint32_t instruction = (cpu->next_instruction >> 21) & 0x1f;
 	// Find instruction based on COP0 instruction
 	switch (instruction) {
-		case MTC0:
+		case MTC:
 			instruction_Mtc0(cpu);
 			break;
 		default:

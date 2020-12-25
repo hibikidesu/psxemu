@@ -90,6 +90,11 @@ void cpu_ExecuteInstruction(CPU *cpu) {
 	}
 }
 
+void cpu_CopyRegister(CPU *cpu) {
+	// Copy out register to register
+	memcpy(cpu->registers, cpu->out_reg, sizeof(cpu->registers));
+}
+
 void cpu_NextInstruction(CPU *cpu) {
 	// Handle loading registers
 	cpu_SetRegister(cpu, cpu->load[0], cpu->load[1]);
@@ -105,8 +110,7 @@ void cpu_NextInstruction(CPU *cpu) {
 	// Execute instruction
 	cpu_ExecuteInstruction(cpu);
 
-	// Copy out register to register
-	memcpy(cpu->registers, cpu->out_reg, sizeof(cpu->registers));
+	cpu_CopyRegister(cpu);
 }
 
 void cpu_AddDevices(CPU *cpu, DEVICES *devices) {
@@ -141,7 +145,7 @@ CPU *cpu_Create() {
 	cpu->running = 0;
 
 	// Print debug
-#if DEBUG == 1
+#if 0
 	log_HexAppendStructItem(sizeof(cpu->devices));
 	log_HexAppendStructItem(sizeof(cpu->running));
 	log_HexAppendStructItem(sizeof(cpu->registers));

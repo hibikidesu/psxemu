@@ -23,6 +23,7 @@ void cpu_DumpRegisters(CPU *cpu);
 uint32_t cpu_GetRegister(CPU *cpu, uint32_t index);
 void cpu_SetRegister(CPU *cpu, uint32_t index, uint32_t value);
 void cpu_ExecuteInstruction(CPU *cpu);
+void cpu_CopyRegister(CPU *cpu);
 void cpu_NextInstruction(CPU *cpu);
 void cpu_AddDevices(CPU *cpu, DEVICES *devices);
 void cpu_Reset(CPU *cpu);

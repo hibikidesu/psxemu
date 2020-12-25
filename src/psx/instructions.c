@@ -52,8 +52,8 @@ uint32_t getI(uint32_t encoded) {
 }
 
 // [16:0] imm sign-extended 32bit
-int32_t getISE(int16_t encoded) {
-	return (int32_t)(encoded & 0xffff);
+uint32_t getISE(int16_t encoded) {
+	return (encoded & 0xffff);
 }
 
 // [10:6]
@@ -161,12 +161,12 @@ void branch(CPU *cpu, uint32_t offset) {
 //
 
 void instruction_Lui(CPU *cpu) {
-	int32_t i = getISE(cpu->next_instruction);
+	uint32_t i = getISE(cpu->next_instruction);
 	uint32_t t = getT(cpu->next_instruction);
 	uint32_t v = i << 16;  // Low 16 bits set to 0
 	
 	cpu_SetRegister(cpu, t, v);
-	log_Debug("0x%X: lui %s, 0x%X", cpu->next_instruction, debugRegisterStrings[t], v);
+	log_Debug("0x%X: lui %s, 0x%X", cpu->next_instruction, debugRegisterStrings[t], i);
 }
 
 void instruction_Ori(CPU *cpu) {
@@ -176,7 +176,7 @@ void instruction_Ori(CPU *cpu) {
 	uint32_t v = cpu_GetRegister(cpu, s) | i;
 
 	cpu_SetRegister(cpu, t, v);
-	log_Debug("0x%X: ori %s, %s, 0x%X", cpu->next_instruction, debugRegisterStrings[t], debugRegisterStrings[s], v);
+	log_Debug("0x%X: ori %s, %s, 0x%X", cpu->next_instruction, debugRegisterStrings[t], debugRegisterStrings[s], i);
 }
 
 void instruction_SW(CPU *cpu) {
@@ -209,7 +209,7 @@ void instruction_Sll(CPU *cpu) {
 }
 
 void instruction_Addiu(CPU *cpu) {
-	int32_t i = getISE(cpu->next_instruction);
+	uint32_t i = getISE(cpu->next_instruction);
 	uint32_t t = getT(cpu->next_instruction);
 	uint32_t s = getS(cpu->next_instruction);
 	uint32_t v = cpu_GetRegister(cpu, s) + i;
@@ -276,20 +276,21 @@ void instruction_Mtc0(CPU *cpu) {
 }
 
 void instruction_Bne(CPU *cpu) {
-	int32_t i = getISE(cpu->next_instruction);
+	uint32_t i = getISE(cpu->next_instruction);
 	uint32_t s = getS(cpu->next_instruction);
 	uint32_t t = getT(cpu->next_instruction);
 
 	// Branch if Not Equal
 	if (cpu_GetRegister(cpu, s) != cpu_GetRegister(cpu, t)) {
 		branch(cpu, i);
+		log_Info("BRANCH");
 	}
 
 	log_Debug("0x%X: bne %s, %s, 0x%X", cpu->next_instruction, debugRegisterStrings[s], debugRegisterStrings[t], i);
 }
 
 void instruction_Addi(CPU *cpu) {
-	int32_t i = getISE(cpu->next_instruction);
+	uint32_t i = getISE(cpu->next_instruction);
 	uint32_t t = getT(cpu->next_instruction);
 	uint32_t s = getS(cpu->next_instruction);
 	int32_t new_s = (int32_t)cpu_GetRegister(cpu, s);
@@ -306,7 +307,7 @@ void instruction_Lw(CPU *cpu) {
 		return;
 	}
 
-	int32_t i = getISE(cpu->next_instruction);
+	uint32_t i = getISE(cpu->next_instruction);
 	uint32_t t = getT(cpu->next_instruction);
 	uint32_t s = getS(cpu->next_instruction);
 	uint32_t addr = cpu_GetRegister(cpu, s) + i;
@@ -320,7 +321,7 @@ void instruction_Lw(CPU *cpu) {
 }
 
 void instruction_Beq(CPU *cpu) {
-	int32_t i = getISE(cpu->next_instruction);
+	uint32_t i = getISE(cpu->next_instruction);
 	uint32_t s = getS(cpu->next_instruction);
 	uint32_t t = getT(cpu->next_instruction);
 
