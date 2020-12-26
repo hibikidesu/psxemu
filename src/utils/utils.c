@@ -23,5 +23,8 @@ uint32_t utils_LoadLittleEndian(uint8_t *data, uint32_t offset) {
 }
 
 void utils_StoreLittleEndian(uint8_t *data, uint32_t offset, uint32_t value) {
-	data[offset] = value;
+	data[offset + 0] = (uint8_t)value;
+	data[offset + 1] = (uint8_t)(value >> 8);
+	data[offset + 2] = (uint8_t)(value >> 16);
+	data[offset + 3] = (uint8_t)(value >> 24);
 }

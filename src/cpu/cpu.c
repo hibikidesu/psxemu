@@ -10,6 +10,21 @@
 #include "../utils/logger.h"
 #include "../utils/ansi.h"
 
+const static char *debugRegisterStrings[32] = {
+	"$zero",
+	"$at",
+	"$v0", "$v1",
+	"$a0", "$a1", "$a2", "$a3",
+	"$t0", "$t1", "$t2", "$t3", "$t4", "$t5", "$t6", "$t7",
+	"$s0", "$s1", "$s2", "$s3", "$s4", "$s5", "$s6", "$s7",
+	"$t8", "$t9",
+	"$k0", "$kl",
+	"$gp",
+	"$sp",
+	"$fp",
+	"$ra"
+};
+
 void cpu_DumpRegisters(CPU *cpu) {
 	int x, y, z;
 	int index = 0;
@@ -19,7 +34,7 @@ void cpu_DumpRegisters(CPU *cpu) {
 		// X axis
 		printf("    ");
 		for (y = 0; y < 4; y++) {
-			printf("%sR%02d%s = \x1B[38;5;%dm", ANSI_TEXT_BOLD, index, ANSI_RESET, 196 + index);
+			printf("%s%*s%s = \x1B[38;5;%dm", ANSI_TEXT_BOLD, 5, debugRegisterStrings[index], ANSI_RESET, 196 + index);
 			// Hex print
 			for (z = 0; z < 4; z++) {
 				printf("%02X ", (cpu->registers[index] >> (8 * z)) & 0xff);
@@ -47,8 +62,14 @@ void cpu_SetLoadRegisters(CPU *cpu, uint32_t index, uint32_t value) {
 }
 
 void cpu_ExecuteInstruction(CPU *cpu) {
+	// log_Debug("Current Instruction: 0x%08X, Next Instruction: 0x%08X, PC: 0x%08X, SR: 0x%08X", 
+		// cpu->this_instruction, cpu->next_instruction, cpu->PC, cpu->SR);
 	// Decode instruction bits [31:26]
 	switch (cpu->this_instruction >> 26) {
+		// SPECIAL
+		case SPECIAL:
+			instruction_Special(cpu);
+			break;
 		case LUI:
 			instruction_Lui(cpu);
 			break;
@@ -58,9 +79,6 @@ void cpu_ExecuteInstruction(CPU *cpu) {
 		case SW:
 			instruction_SW(cpu);
 			break;
-		case SLL:
-			instruction_Sll(cpu);
-			break;
 		case ADDI:
 			instruction_Addi(cpu);
 			break;
@@ -69,9 +87,6 @@ void cpu_ExecuteInstruction(CPU *cpu) {
 			break;
 		case J:
 			instruction_J(cpu);
-			break;
-		case OR:
-			instruction_Or(cpu);
 			break;
 		case COP0:
 			cop0_Handle(cpu);
@@ -84,9 +99,6 @@ void cpu_ExecuteInstruction(CPU *cpu) {
 			break;
 		// case BEQ:
 		// 	instruction_Beq(cpu);
-		// 	break;
-		// case SLTU:
-		// 	instruction_Sltu(cpu);
 		// 	break;
 		default:
 			log_Error("Unhandled Encoded Instruction 0x%08X", cpu->this_instruction);

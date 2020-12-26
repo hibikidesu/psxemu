@@ -6,7 +6,7 @@
 // All BIOS's always have the same size.
 // 512 * 1024
 #define BIOS_SIZE 0x80000
-#define BIOS_OFFSET 0xbfc00000
+#define BIOS_OFFSET 0x1fc00000
 
 typedef struct {
 	uint8_t data[BIOS_SIZE];

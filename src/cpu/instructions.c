@@ -11,19 +11,31 @@
 // Helpers
 //
 
-const static char *debugRegisterStrings[32] = {
-	"$zero",
-	"$at",
-	"$v0", "$v1",
-	"$a0", "$a1", "$a2", "$a3",
-	"$t0", "$t1", "$t2", "$t3", "$t4", "$t5", "$t6", "$t7",
-	"$s0", "$s1", "$s2", "$s3", "$s4", "$s5", "$s6", "$s7",
-	"$t8", "$t9",
-	"$k0", "$kl",
-	"$gp",
-	"$sp",
-	"$fp",
-	"$ra"
+// const static char *debugRegisterStrings[32] = {
+// 	"$zero",
+// 	"$at",
+// 	"$v0", "$v1",
+// 	"$a0", "$a1", "$a2", "$a3",
+// 	"$t0", "$t1", "$t2", "$t3", "$t4", "$t5", "$t6", "$t7",
+// 	"$s0", "$s1", "$s2", "$s3", "$s4", "$s5", "$s6", "$s7",
+// 	"$t8", "$t9",
+// 	"$k0", "$kl",
+// 	"$gp",
+// 	"$sp",
+// 	"$fp",
+// 	"$ra"
+// };
+
+// Region Memory Lookup Table
+const static uint32_t REGION_MASK[8] = {
+	// KUSEG, 2048MB
+	0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff,
+	// KSEG0, 512MB
+	0x7fffffff,
+	// KSEG1, 512MB
+	0x1fffffff,
+	// KSEG2, 1024MB
+	0xffffffff, 0xffffffff
 };
 
 // [25:21]
@@ -66,33 +78,57 @@ uint32_t getSubfunc(uint32_t encoded) {
 	return encoded & 0x3f;
 }
 
-uint8_t load_Memory(uint32_t offset) {
+// Get memory region, 512MB chunks
+uint32_t mask_region(uint32_t address) {
+	return address & REGION_MASK[address >> 29];
+}
+
+uint8_t load_Memory(CPU *cpu, uint32_t offset) {
+	uint32_t value;
+	uint32_t new_offset;
 	if ((offset % 4) != 0) {
 		log_Error("Unaligned Store 0x%X", offset);
 		exit(1);
 	}
 
-	log_Warn("MEMORY READ");
-	return 0;
+	new_offset = mask_region(offset);
+
+	switch (new_offset) {
+		// Load from ram
+		case RAM_OFFSET ... RAM_OFFSET + RAM_SIZE:
+			value = ram_Load32(cpu->devices->ram, new_offset);
+			log_Debug("Read 0x%X from 0x%X (RAM)", value, new_offset);
+			break;
+
+		default:
+			log_Debug("Unkown memory read address 0x%X", mask_region(new_offset));
+			exit(1);
+			break;
+	}
+
+	return value;
 }
 
 void store_Memory(CPU *cpu, uint32_t offset, uint32_t value) {
+	uint32_t new_offset;
 	if ((offset % 4) != 0) {
 		log_Error("Unaligned Store 0x%X", offset);
 		exit(1);
 	}
 
+	new_offset = mask_region(offset);
+
 	// Check addresses
-	switch (offset) {
+	switch (new_offset) {
 		// If its a bad expansion
 		case 0x1f802000:
 		case 0x1f000000:
-			log_Error("Bad expansion: Address 0x%X", offset);
+			log_Error("Bad expansion: Address 0x%X", new_offset);
 			exit(1);
 			break;
 
 		// Write into MEM_CONTROL
-		case MEM_CONTROL ... MEM_CONTROL + MEM_CONTROL_SIZE:
+		case MEM_IO ... MEM_IO + MEM_IO_SIZE:
 			log_Debug("MEM_CONTROL write");
 			break;
 		
@@ -108,11 +144,11 @@ void store_Memory(CPU *cpu, uint32_t offset, uint32_t value) {
 
 		// RAM Area
 		case RAM_OFFSET ... RAM_OFFSET + RAM_SIZE:
-			ram_Store32(cpu->devices->ram, offset, value);
+			ram_Store32(cpu->devices->ram, new_offset, value);
 			break;
 
 		default:
-			log_Error("Not in memory control range, Address 0x%X, Tried to store 0x%X", offset, value);
+			log_Error("Not in memory control range, Address 0x%X, Tried to store 0x%X", new_offset, value);
 			exit(1);
 			break;
 	}
@@ -166,7 +202,7 @@ void instruction_Lui(CPU *cpu) {
 	uint32_t v = i << 16;  // Low 16 bits set to 0
 	
 	cpu_SetRegister(cpu, t, v);
-	log_Debug("0x%X: lui %s, 0x%X", cpu->this_instruction, debugRegisterStrings[t], i);
+	// log_Debug("0x%X: lui %s, 0x%X", cpu->this_instruction, debugRegisterStrings[t], i);
 }
 
 void instruction_Ori(CPU *cpu) {
@@ -176,7 +212,7 @@ void instruction_Ori(CPU *cpu) {
 	uint32_t v = cpu_GetRegister(cpu, s) | i;
 
 	cpu_SetRegister(cpu, t, v);
-	log_Debug("0x%X: ori %s, %s, 0x%X", cpu->this_instruction, debugRegisterStrings[t], debugRegisterStrings[s], i);
+	// log_Debug("0x%X: ori %s, %s, 0x%X", cpu->this_instruction, debugRegisterStrings[t], debugRegisterStrings[s], i);
 }
 
 void instruction_SW(CPU *cpu) {
@@ -194,7 +230,7 @@ void instruction_SW(CPU *cpu) {
 
 	store_Memory(cpu, addr, v);
 
-	log_Debug("0x%X: sw %s, 0x%X, %s", cpu->this_instruction, debugRegisterStrings[t], i, debugRegisterStrings[s]);
+	// log_Debug("0x%X: sw %s, 0x%X, %s", cpu->this_instruction, debugRegisterStrings[t], i, debugRegisterStrings[s]);
 }
 
 void instruction_Sll(CPU *cpu) {
@@ -205,7 +241,7 @@ void instruction_Sll(CPU *cpu) {
 
 	cpu_SetRegister(cpu, d, v);
 
-	log_Debug("0x%08X: sll %s, %s, 0x%X", cpu->this_instruction, debugRegisterStrings[d], debugRegisterStrings[t], i);
+	// log_Debug("0x%08X: sll %s, %s, 0x%X", cpu->this_instruction, debugRegisterStrings[d], debugRegisterStrings[t], i);
 }
 
 void instruction_Addiu(CPU *cpu) {
@@ -216,14 +252,15 @@ void instruction_Addiu(CPU *cpu) {
 
 	cpu_SetRegister(cpu, t, v);
 
-	log_Debug("0x%X: addiu %s, %s, 0x%X", cpu->this_instruction, debugRegisterStrings[t], debugRegisterStrings[s], i);
+	// log_Debug("0x%X: addiu %s, %s, 0x%X", cpu->this_instruction, debugRegisterStrings[t], debugRegisterStrings[s], i);
 }
 
 void instruction_J(CPU *cpu) {
 	uint32_t i = getJump(cpu->this_instruction);
 	cpu->PC = (cpu->PC & 0xf0000000) | (i << 2);
+	// log_Debug("JUMP TO 0x%X", cpu->PC);
 
-	log_Debug("0x%X: j 0x%X", cpu->this_instruction, i);
+	// log_Debug("0x%X: j 0x%X", cpu->this_instruction, i);
 }
 
 void instruction_Or(CPU *cpu) {
@@ -234,7 +271,110 @@ void instruction_Or(CPU *cpu) {
 
 	cpu_SetRegister(cpu, d, v);
 
-	log_Debug("0x%X: or %s, %s, %s", cpu->this_instruction, debugRegisterStrings[d], debugRegisterStrings[s], debugRegisterStrings[t]);
+	// log_Debug("0x%X: or %s, %s, %s", cpu->this_instruction, debugRegisterStrings[d], debugRegisterStrings[s], debugRegisterStrings[t]);
+}
+
+void instruction_Bne(CPU *cpu) {
+	uint32_t i = getISE(cpu->this_instruction);
+	uint32_t s = getS(cpu->this_instruction);
+	uint32_t t = getT(cpu->this_instruction);
+
+	// Branch if Not Equal
+	if (cpu_GetRegister(cpu, s) != cpu_GetRegister(cpu, t)) {
+		branch(cpu, i);
+	}
+
+	// log_Debug("0x%X: bne %s, %s, 0x%X", cpu->this_instruction, debugRegisterStrings[s], debugRegisterStrings[t], i);
+}
+
+void instruction_Addi(CPU *cpu) {
+	uint32_t i = getISE(cpu->this_instruction);
+	uint32_t t = getT(cpu->this_instruction);
+	uint32_t s = getS(cpu->this_instruction);
+	int32_t new_s = (int32_t)cpu_GetRegister(cpu, s);
+	uint32_t v = new_s + i;
+
+	cpu_SetRegister(cpu, t, v);
+
+	// log_Debug("0x%X: addi %s, %s, 0x%X", cpu->this_instruction, debugRegisterStrings[t], debugRegisterStrings[s], i);
+}
+
+void instruction_Lw(CPU *cpu) {
+	// Isolated Cache Check
+	if ((cpu->SR & 0x10000) != 0) {
+		return;
+	}
+
+	uint32_t i = getISE(cpu->this_instruction);
+	uint32_t t = getT(cpu->this_instruction);
+	uint32_t s = getS(cpu->this_instruction);
+	uint32_t addr = cpu_GetRegister(cpu, s) + i;
+	uint32_t v = load_Memory(cpu, addr);
+
+	// Put load in delay slot
+	cpu_SetLoadRegisters(cpu, t, v);
+
+	// log_Debug("0x%X: lw %s, 0x%X, %s", cpu->this_instruction, debugRegisterStrings[t], i, debugRegisterStrings[s]);
+}
+
+void instruction_Beq(CPU *cpu) {
+	uint32_t i = getISE(cpu->this_instruction);
+	uint32_t s = getS(cpu->this_instruction);
+	uint32_t t = getT(cpu->this_instruction);
+
+	if (cpu_GetRegister(cpu, s) == cpu_GetRegister(cpu, t)) {
+		cpu->PC = (cpu->PC + (i << 2)) - 4;
+	}
+
+	// log_Debug("0x%X: beq %s, %s, 0x%X", cpu->this_instruction, debugRegisterStrings[s], debugRegisterStrings[t], i);
+}
+
+void instruction_Sltu(CPU *cpu) {
+	uint32_t d = getD(cpu->this_instruction);
+	uint32_t s = getS(cpu->this_instruction);
+	uint32_t t = getT(cpu->this_instruction);
+	uint32_t v = cpu_GetRegister(cpu, s) < cpu_GetRegister(cpu, t);
+
+	cpu_SetRegister(cpu, d, v);
+
+	// log_Debug("0x%X: sltu %s, %s, %s", cpu->this_instruction, debugRegisterStrings[d], debugRegisterStrings[s], debugRegisterStrings[t]);
+}
+
+void instruction_Addu(CPU *cpu) {
+	uint32_t s = getS(cpu->this_instruction);
+	uint32_t t = getT(cpu->this_instruction);
+	uint32_t d = getD(cpu->this_instruction);
+	uint32_t v = cpu_GetRegister(cpu, s) + cpu_GetRegister(cpu, t);
+
+	cpu_SetRegister(cpu, d, v);
+
+	// log_Debug("0x%X: addu %s, %s, %s", cpu->this_instruction, debugRegisterStrings[d], debugRegisterStrings[s], debugRegisterStrings[t]);
+}
+
+//
+// SPECIAL HANDLERS
+//
+
+void instruction_Special(CPU *cpu) {
+	switch (getSubfunc(cpu->this_instruction)) {
+		case SLL:
+			instruction_Sll(cpu);
+			break;
+		case OR:
+			instruction_Or(cpu);
+			break;
+		case SLTU:
+			instruction_Sltu(cpu);
+			break;
+		case ADDU:
+			instruction_Addu(cpu);
+			break;
+		default:
+			log_Error("Unhandled SPECIAL Encoded Instruction 0x%08X, Subfunc 0x%X", 
+				cpu->this_instruction, getSubfunc(cpu->this_instruction));
+			exit(1);
+			break;
+	}
 }
 
 void instruction_Mtc0(CPU *cpu) {
@@ -272,82 +412,5 @@ void instruction_Mtc0(CPU *cpu) {
 			break;
 	}
 
-	log_Debug("0x%X: mtc0 %s, %s", cpu->this_instruction, debugRegisterStrings[cpu_r], debugRegisterStrings[cop_r]);
-}
-
-void instruction_Bne(CPU *cpu) {
-	uint32_t i = getISE(cpu->this_instruction);
-	uint32_t s = getS(cpu->this_instruction);
-	uint32_t t = getT(cpu->this_instruction);
-
-	// Branch if Not Equal
-	if (cpu_GetRegister(cpu, s) != cpu_GetRegister(cpu, t)) {
-		branch(cpu, i);
-	}
-
-	log_Debug("0x%X: bne %s, %s, 0x%X", cpu->this_instruction, debugRegisterStrings[s], debugRegisterStrings[t], i);
-}
-
-void instruction_Addi(CPU *cpu) {
-	uint32_t i = getISE(cpu->this_instruction);
-	uint32_t t = getT(cpu->this_instruction);
-	uint32_t s = getS(cpu->this_instruction);
-	int32_t new_s = (int32_t)cpu_GetRegister(cpu, s);
-	uint32_t v = new_s + i;
-
-	cpu_SetRegister(cpu, t, v);
-
-	log_Debug("0x%X: addi %s, %s, 0x%X", cpu->this_instruction, debugRegisterStrings[t], debugRegisterStrings[s], i);
-}
-
-void instruction_Lw(CPU *cpu) {
-	// Isolated Cache Check
-	if ((cpu->SR & 0x10000) != 0) {
-		return;
-	}
-
-	uint32_t i = getISE(cpu->this_instruction);
-	uint32_t t = getT(cpu->this_instruction);
-	uint32_t s = getS(cpu->this_instruction);
-	uint32_t addr = cpu_GetRegister(cpu, s) + i;
-	uint32_t v = load_Memory(addr);
-
-	// Put load in delay slot
-	cpu_SetLoadRegisters(cpu, t, v);
-
-	log_Debug("0x%X: lw %s, 0x%X, %s", cpu->this_instruction, debugRegisterStrings[t], i, debugRegisterStrings[s]);
-}
-
-void instruction_Beq(CPU *cpu) {
-	uint32_t i = getISE(cpu->this_instruction);
-	uint32_t s = getS(cpu->this_instruction);
-	uint32_t t = getT(cpu->this_instruction);
-
-	if (cpu_GetRegister(cpu, s) == cpu_GetRegister(cpu, t)) {
-		cpu->PC = (cpu->PC + (i << 2)) - 4;
-	}
-
-	log_Debug("0x%X: beq %s, %s, 0x%X", cpu->this_instruction, debugRegisterStrings[s], debugRegisterStrings[t], i);
-}
-
-void instruction_Sltu(CPU *cpu) {
-	uint32_t d = getD(cpu->this_instruction);
-	uint32_t s = getS(cpu->this_instruction);
-	uint32_t t = getT(cpu->this_instruction);
-	uint32_t v = cpu_GetRegister(cpu, s) < cpu_GetRegister(cpu, t);
-
-	cpu_SetRegister(cpu, d, v);
-
-	log_Debug("0x%X: sltu %s, %s, %s", cpu->this_instruction, debugRegisterStrings[d], debugRegisterStrings[s], debugRegisterStrings[t]);
-}
-
-void instruction_Addu(CPU *cpu) {
-	uint32_t s = getS(cpu->this_instruction);
-	uint32_t t = getT(cpu->this_instruction);
-	uint32_t d = getD(cpu->this_instruction);
-	uint32_t v = cpu_GetRegister(cpu, s) + cpu_GetRegister(cpu, t);
-
-	cpu_SetRegister(cpu, d, v);
-
-	log_Debug("0x%X: addu %s, %s, %s", cpu->this_instruction, debugRegisterStrings[d], debugRegisterStrings[s], debugRegisterStrings[t]);
+	// log_Debug("0x%X: mtc0 %s, %s", cpu->this_instruction, debugRegisterStrings[cpu_r], debugRegisterStrings[cop_r]);
 }

@@ -4,11 +4,15 @@
 #include <stdint.h>
 #include "cpu.h"
 
-#define MEM_CONTROL 0x1f801000
-#define MEM_CONTROL_SIZE 36
-#define RAM_CONFIG  0x1f801060
+// KUSEG
+#define MEM_IO 0x1F801000
+#define MEM_IO_SIZE 36
+
+#define RAM_CONFIG  0x1F801060
 #define RAM_CONFIG_SIZE 4
-#define CACHE_CONTROL 0xfffe0130
+
+// KSEG2
+#define CACHE_CONTROL 0xFFFE0130
 #define CACHE_CONTROL_SIZE 4
 
 // Registers Defined for debugging
@@ -73,7 +77,7 @@
 #define LHI   0b011001
 #define LLO   0b011000
 #define SLT   0b101010
-#define SLTU  0b101001
+#define SLTU  0b101011
 #define SLTI  0b001010
 #define SLTIU 0b001001
 #define BEQ   0b000100
@@ -105,6 +109,9 @@
 #define MTC 0b00100
 #define CTC 0b00110
 
+#define SPECIAL 0b000000
+
+// Single instructions
 void instruction_Lui(CPU *cpu);
 void instruction_Ori(CPU *cpu);
 void instruction_SW(CPU *cpu);
@@ -112,11 +119,15 @@ void instruction_Sll(CPU *cpu);
 void instruction_Addiu(CPU *cpu);
 void instruction_J(CPU *cpu);
 void instruction_Or(CPU *cpu);
-void instruction_Mtc0(CPU *cpu);
 void instruction_Bne(CPU *cpu);
 void instruction_Addi(CPU *cpu);
 void instruction_Lw(CPU *cpu);
 void instruction_Beq(CPU *cpu);
 void instruction_Sltu(CPU *cpu);
+void instruction_Addu(CPU *cpu);
+
+// Special handlers
+void instruction_Special(CPU *cpu);
+void instruction_Mtc0(CPU *cpu);
 
 #endif
