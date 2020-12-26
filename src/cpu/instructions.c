@@ -11,20 +11,20 @@
 // Helpers
 //
 
-// const static char *debugRegisterStrings[32] = {
-// 	"$zero",
-// 	"$at",
-// 	"$v0", "$v1",
-// 	"$a0", "$a1", "$a2", "$a3",
-// 	"$t0", "$t1", "$t2", "$t3", "$t4", "$t5", "$t6", "$t7",
-// 	"$s0", "$s1", "$s2", "$s3", "$s4", "$s5", "$s6", "$s7",
-// 	"$t8", "$t9",
-// 	"$k0", "$kl",
-// 	"$gp",
-// 	"$sp",
-// 	"$fp",
-// 	"$ra"
-// };
+const static char *debugRegisterStrings[32] = {
+	"$zero",
+	"$at",
+	"$v0", "$v1",
+	"$a0", "$a1", "$a2", "$a3",
+	"$t0", "$t1", "$t2", "$t3", "$t4", "$t5", "$t6", "$t7",
+	"$s0", "$s1", "$s2", "$s3", "$s4", "$s5", "$s6", "$s7",
+	"$t8", "$t9",
+	"$k0", "$kl",
+	"$gp",
+	"$sp",
+	"$fp",
+	"$ra"
+};
 
 // Region Memory Lookup Table
 const static uint32_t REGION_MASK[8] = {
@@ -291,12 +291,11 @@ void branch(CPU *cpu, uint32_t offset) {
 //
 
 void instruction_Lui(CPU *cpu) {
-	uint32_t i = getISE(cpu->this_instruction);
+	uint32_t i = getI(cpu->this_instruction);
 	uint32_t t = getT(cpu->this_instruction);
-	uint32_t v = i << 16;  // Low 16 bits set to 0
 	
-	cpu_SetRegister(cpu, t, v);
-	// log_Debug("0x%X: lui %s, 0x%X", cpu->this_instruction, debugRegisterStrings[t], i);
+	cpu_SetRegister(cpu, t, i << 16);
+	log_Debug("0x%X: lui %s, 0x%X", cpu->this_instruction, debugRegisterStrings[t], i);
 }
 
 void instruction_Ori(CPU *cpu) {
@@ -306,7 +305,7 @@ void instruction_Ori(CPU *cpu) {
 	uint32_t v = cpu_GetRegister(cpu, s) | i;
 
 	cpu_SetRegister(cpu, t, v);
-	// log_Debug("0x%X: ori %s, %s, 0x%X", cpu->this_instruction, debugRegisterStrings[t], debugRegisterStrings[s], i);
+	log_Debug("0x%X: ori %s, %s, 0x%X", cpu->this_instruction, debugRegisterStrings[t], debugRegisterStrings[s], i);
 }
 
 void instruction_SW(CPU *cpu) {
@@ -316,15 +315,15 @@ void instruction_SW(CPU *cpu) {
 		return;
 	}
 
-	uint32_t i = getI(cpu->this_instruction);
+	uint32_t i = getISE(cpu->this_instruction);
 	uint32_t t = getT(cpu->this_instruction);
 	uint32_t s = getS(cpu->this_instruction);
-	uint32_t v = cpu_GetRegister(cpu, t);
-	uint32_t addr = cpu_GetRegister(cpu, s) + i;
+	uint32_t v = cpu_GetRegister(cpu, t) + i;
+	uint32_t addr = cpu_GetRegister(cpu, s);
+
+	log_Debug("0x%X: sw %s, 0x%X, %s", cpu->this_instruction, debugRegisterStrings[t], i, debugRegisterStrings[s]);
 
 	store_Int(cpu, addr, v);
-
-	// log_Debug("0x%X: sw %s, 0x%X, %s", cpu->this_instruction, debugRegisterStrings[t], i, debugRegisterStrings[s]);
 }
 
 void instruction_Sll(CPU *cpu) {
@@ -335,7 +334,7 @@ void instruction_Sll(CPU *cpu) {
 
 	cpu_SetRegister(cpu, d, v);
 
-	// log_Debug("0x%08X: sll %s, %s, 0x%X", cpu->this_instruction, debugRegisterStrings[d], debugRegisterStrings[t], i);
+	log_Debug("0x%08X: sll %s, %s, 0x%X", cpu->this_instruction, debugRegisterStrings[d], debugRegisterStrings[t], i);
 }
 
 void instruction_Addiu(CPU *cpu) {
@@ -346,15 +345,15 @@ void instruction_Addiu(CPU *cpu) {
 
 	cpu_SetRegister(cpu, t, v);
 
-	// log_Debug("0x%X: addiu %s, %s, 0x%X", cpu->this_instruction, debugRegisterStrings[t], debugRegisterStrings[s], i);
+	log_Debug("0x%X: addiu %s, %s, 0x%X", cpu->this_instruction, debugRegisterStrings[t], debugRegisterStrings[s], i);
 }
 
 void instruction_J(CPU *cpu) {
 	uint32_t i = getJump(cpu->this_instruction);
 	cpu->PC = (cpu->PC & 0xf0000000) | (i << 2);
-	// log_Debug("JUMP TO 0x%X", cpu->PC);
+	log_Debug("JUMP TO 0x%X", cpu->PC);
 
-	// log_Debug("0x%X: j 0x%X", cpu->this_instruction, i);
+	log_Debug("0x%X: j 0x%X", cpu->this_instruction, i);
 }
 
 void instruction_Or(CPU *cpu) {
@@ -365,7 +364,7 @@ void instruction_Or(CPU *cpu) {
 
 	cpu_SetRegister(cpu, d, v);
 
-	// log_Debug("0x%X: or %s, %s, %s", cpu->this_instruction, debugRegisterStrings[d], debugRegisterStrings[s], debugRegisterStrings[t]);
+	log_Debug("0x%X: or %s, %s, %s", cpu->this_instruction, debugRegisterStrings[d], debugRegisterStrings[s], debugRegisterStrings[t]);
 }
 
 void instruction_Bne(CPU *cpu) {
@@ -378,7 +377,7 @@ void instruction_Bne(CPU *cpu) {
 		branch(cpu, i);
 	}
 
-	// log_Debug("0x%X: bne %s, %s, 0x%X", cpu->this_instruction, debugRegisterStrings[s], debugRegisterStrings[t], i);
+	log_Debug("0x%X: bne %s, %s, 0x%X", cpu->this_instruction, debugRegisterStrings[s], debugRegisterStrings[t], i);
 }
 
 void instruction_Addi(CPU *cpu) {
@@ -390,7 +389,7 @@ void instruction_Addi(CPU *cpu) {
 
 	cpu_SetRegister(cpu, t, v);
 
-	// log_Debug("0x%X: addi %s, %s, 0x%X", cpu->this_instruction, debugRegisterStrings[t], debugRegisterStrings[s], i);
+	log_Debug("0x%X: addi %s, %s, 0x%X", cpu->this_instruction, debugRegisterStrings[t], debugRegisterStrings[s], i);
 }
 
 void instruction_Lw(CPU *cpu) {
@@ -408,7 +407,7 @@ void instruction_Lw(CPU *cpu) {
 	// Put load in delay slot
 	cpu_SetLoadRegisters(cpu, t, v);
 
-	// log_Debug("0x%X: lw %s, 0x%X, %s", cpu->this_instruction, debugRegisterStrings[t], i, debugRegisterStrings[s]);
+	log_Debug("0x%X: lw %s, 0x%X, %s", cpu->this_instruction, debugRegisterStrings[t], i, debugRegisterStrings[s]);
 }
 
 void instruction_Sltu(CPU *cpu) {
@@ -419,7 +418,7 @@ void instruction_Sltu(CPU *cpu) {
 
 	cpu_SetRegister(cpu, d, v);
 
-	// log_Debug("0x%X: sltu %s, %s, %s", cpu->this_instruction, debugRegisterStrings[d], debugRegisterStrings[s], debugRegisterStrings[t]);
+	log_Debug("0x%X: sltu %s, %s, %s", cpu->this_instruction, debugRegisterStrings[d], debugRegisterStrings[s], debugRegisterStrings[t]);
 }
 
 void instruction_Addu(CPU *cpu) {
@@ -430,7 +429,7 @@ void instruction_Addu(CPU *cpu) {
 
 	cpu_SetRegister(cpu, d, v);
 
-	// log_Debug("0x%X: addu %s, %s, %s", cpu->this_instruction, debugRegisterStrings[d], debugRegisterStrings[s], debugRegisterStrings[t]);
+	log_Debug("0x%X: addu %s, %s, %s", cpu->this_instruction, debugRegisterStrings[d], debugRegisterStrings[s], debugRegisterStrings[t]);
 }
 
 void instruction_Sh(CPU *cpu) {
@@ -441,7 +440,7 @@ void instruction_Sh(CPU *cpu) {
 
 	store_Short(cpu, addr, cpu_GetRegister(cpu, t));
 	
-	// log_Debug("0x%X: sh %s, 0x%X, %s", cpu->this_instruction, debugRegisterStrings[t], i, debugRegisterStrings[s]);
+	log_Debug("0x%X: sh %s, 0x%X, %s", cpu->this_instruction, debugRegisterStrings[t], i, debugRegisterStrings[s]);
 }
  
 void instruction_Jal(CPU *cpu) {
@@ -451,7 +450,7 @@ void instruction_Jal(CPU *cpu) {
 	// Jump
 	instruction_J(cpu);
 
-	// log_Debug("0x%X: jal", cpu->this_instruction);
+	log_Debug("0x%X: jal", cpu->this_instruction);
 }
 
 void instruction_Andi(CPU *cpu) {
@@ -462,7 +461,7 @@ void instruction_Andi(CPU *cpu) {
 
 	cpu_SetRegister(cpu, t, v);
 
-	// log_Debug("0x%X: andi %s, %s, 0x%X", cpu->this_instruction, debugRegisterStrings[t], debugRegisterStrings[s], i);
+	log_Debug("0x%X: andi %s, %s, 0x%X", cpu->this_instruction, debugRegisterStrings[t], debugRegisterStrings[s], i);
 }
 
 void instruction_Sb(CPU *cpu) {
@@ -476,15 +475,15 @@ void instruction_Sb(CPU *cpu) {
 	
 	store_Byte(cpu, cpu_GetRegister(cpu, s) + i, cpu_GetRegister(cpu, t));
 
-	// log_Debug("0x%X: sb %s, 0x%X, %s", cpu->this_instruction, debugRegisterStrings[t], i, debugRegisterStrings[s]);
+	log_Debug("0x%X: sb %s, 0x%X, %s", cpu->this_instruction, debugRegisterStrings[t], i, debugRegisterStrings[s]);
 }
 
 void instruction_Jr(CPU *cpu) {
 	uint32_t s = getS(cpu->this_instruction);
 	cpu->PC = cpu_GetRegister(cpu, s);
-	log_Debug("SET PC: %d = 0x%X", s, cpu->PC);
+	log_Debug("SET PC: %s = 0x%X", debugRegisterStrings[s], cpu->PC);
 
-	// log_Debug("0x%X: jr %s", cpu->this_instruction, debugRegisterStrings[s]);
+	log_Debug("0x%X: jr %s", cpu->this_instruction, debugRegisterStrings[s]);
 }
 
 void instruction_Lb(CPU *cpu) {
@@ -495,7 +494,7 @@ void instruction_Lb(CPU *cpu) {
 
 	cpu_SetLoadRegisters(cpu, t, v);
 
-	// log_Debug("0x%X: lb %s, 0x%X, %s", cpu->this_instruction, debugRegisterStrings[t], i, debugRegisterStrings[s]);
+	log_Debug("0x%X: lb %s, 0x%X, %s", cpu->this_instruction, debugRegisterStrings[t], i, debugRegisterStrings[s]);
 }
 
 void instruction_Beq(CPU *cpu) {
@@ -507,7 +506,7 @@ void instruction_Beq(CPU *cpu) {
 		cpu->PC = (cpu->PC + (i << 2)) - 4;
 	}
 
-	// log_Debug("0x%X: beq %s, %s, 0x%X", cpu->this_instruction, debugRegisterStrings[s], debugRegisterStrings[t], i);
+	log_Debug("0x%X: beq %s, %s, 0x%X", cpu->this_instruction, debugRegisterStrings[s], debugRegisterStrings[t], i);
 }
 
 void instruction_And(CPU *cpu) {
@@ -518,7 +517,7 @@ void instruction_And(CPU *cpu) {
 	
 	cpu_SetRegister(cpu, d, v);
 
-	// log_Debug("0x%X: and %s, %s, %s", cpu->this_instruction, debugRegisterStrings[d], debugRegisterStrings[s], debugRegisterStrings[t]);
+	log_Debug("0x%X: and %s, %s, %s", cpu->this_instruction, debugRegisterStrings[d], debugRegisterStrings[s], debugRegisterStrings[t]);
 }
 
 //
@@ -588,7 +587,7 @@ void instruction_Mtc0(CPU *cpu) {
 			break;
 	}
 
-	// log_Debug("0x%X: mtc0 %s, %s", cpu->this_instruction, debugRegisterStrings[cpu_r], debugRegisterStrings[cop_r]);
+	log_Debug("0x%X: mtc0 %s, %s", cpu->this_instruction, debugRegisterStrings[cpu_r], debugRegisterStrings[cop_r]);
 }
 
 void instruction_Mfc0(CPU *cpu) {
