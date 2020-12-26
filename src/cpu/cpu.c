@@ -63,7 +63,7 @@ void cpu_SetLoadRegisters(CPU *cpu, uint32_t index, uint32_t value) {
 
 void cpu_ExecuteInstruction(CPU *cpu) {
 	// log_Debug("Current Instruction: 0x%08X, Next Instruction: 0x%08X, PC: 0x%08X, SR: 0x%08X", 
-		// cpu->this_instruction, cpu->next_instruction, cpu->PC, cpu->SR);
+	// 	cpu->this_instruction, cpu->next_instruction, cpu->PC, cpu->SR);
 	// Decode instruction bits [31:26]
 	switch (cpu->this_instruction >> 26) {
 		// SPECIAL
@@ -97,9 +97,24 @@ void cpu_ExecuteInstruction(CPU *cpu) {
 		case LW:
 			instruction_Lw(cpu);
 			break;
-		// case BEQ:
-		// 	instruction_Beq(cpu);
-		// 	break;
+		case SH:
+			instruction_Sh(cpu);
+			break;
+		case JAL:
+			instruction_Jal(cpu);
+			break;
+		case ANDI:
+			instruction_Andi(cpu);
+			break;
+		case SB:
+			instruction_Sb(cpu);
+			break;
+		case LB:
+			instruction_Lb(cpu);
+			break;
+		case BEQ:
+			instruction_Beq(cpu);
+			break;
 		default:
 			log_Error("Unhandled Encoded Instruction 0x%08X", cpu->this_instruction);
 			cpu_DumpRegisters(cpu);
@@ -122,7 +137,7 @@ void cpu_NextInstruction(CPU *cpu) {
 	cpu->this_instruction = cpu->next_instruction;
 
 	// Get next instruction
-	cpu->next_instruction = bios_Load32(cpu->devices->bios, cpu->PC);
+	cpu->next_instruction = bios_LoadInt(cpu->devices->bios, cpu->PC);
 
 	// Incr to where the next instruction is
 	cpu->PC += 4;

@@ -12,7 +12,11 @@ bool utils_AddressInRange(uint32_t address, uint32_t location, uint32_t size) {
 	return false;
 }
 
-uint32_t utils_LoadLittleEndian(uint8_t *data, uint32_t offset) {
+uint8_t utils_LoadLittleEndianByte(uint8_t *data, uint32_t offset) {
+	return data[offset];
+}
+
+uint32_t utils_LoadLittleEndianInt(uint8_t *data, uint32_t offset) {
 	uint8_t b0, b1, b2, b3;
 	// Convert to little endian
 	b0 = data[offset + 0];
@@ -22,7 +26,11 @@ uint32_t utils_LoadLittleEndian(uint8_t *data, uint32_t offset) {
 	return b0 | (b1 << 8) | (b2 << 16) | (b3 << 24);
 }
 
-void utils_StoreLittleEndian(uint8_t *data, uint32_t offset, uint32_t value) {
+void utils_StoreLittleEndianByte(uint8_t *data, uint32_t offset, uint8_t value) {
+	data[offset] = value;
+}
+
+void utils_StoreLittleEndianInt(uint8_t *data, uint32_t offset, uint32_t value) {
 	data[offset + 0] = (uint8_t)value;
 	data[offset + 1] = (uint8_t)(value >> 8);
 	data[offset + 2] = (uint8_t)(value >> 16);

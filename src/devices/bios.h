@@ -12,7 +12,8 @@ typedef struct {
 	uint8_t data[BIOS_SIZE];
 } BIOS;
 
-uint32_t bios_Load32(BIOS *bios, uint32_t address);
+uint8_t bios_LoadByte(BIOS *bios, uint32_t address);
+uint32_t bios_LoadInt(BIOS *bios, uint32_t address);
 int bios_LoadBios(BIOS *bios, char *biosFile);
 BIOS *bios_Create(char *biosFile);
 void bios_Destroy(BIOS *bios);

@@ -11,8 +11,10 @@ typedef struct {
 	uint8_t data[RAM_SIZE];
 } RAM;
 
-uint32_t ram_Load32(RAM *ram, uint32_t address);
-void ram_Store32(RAM *ram, uint32_t offset, uint32_t value);
+uint8_t ram_LoadByte(RAM *ram, uint32_t address);
+uint32_t ram_LoadInt(RAM *ram, uint32_t address);
+void ram_StoreByte(RAM *ram, uint32_t address, uint8_t value);
+void ram_StoreInt(RAM *ram, uint32_t offset, uint32_t value);
 RAM *ram_Create();
 void ram_Destroy(RAM *ram);
 

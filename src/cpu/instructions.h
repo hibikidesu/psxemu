@@ -11,6 +11,18 @@
 #define RAM_CONFIG  0x1F801060
 #define RAM_CONFIG_SIZE 4
 
+// Sound Processing Unit
+#define SPU_OFFSET 0x1F801C00
+#define SPU_SIZE 640
+
+// Expansion 1
+#define EXPANSION_1_OFFSET 0x1f000000
+#define EXPANSION_1_SIZE 512 * 1024
+
+// Expansion 2 (I/O Ports)
+#define EXPANSION_2_OFFSET 0x1F802000
+#define EXPANSION_2_SIZE 66
+
 // KSEG2
 #define CACHE_CONTROL 0xFFFE0130
 #define CACHE_CONTROL_SIZE 4
@@ -111,6 +123,9 @@
 
 #define SPECIAL 0b000000
 
+// Helpers
+uint32_t mask_region(uint32_t address);
+
 // Single instructions
 void instruction_Lui(CPU *cpu);
 void instruction_Ori(CPU *cpu);
@@ -122,12 +137,19 @@ void instruction_Or(CPU *cpu);
 void instruction_Bne(CPU *cpu);
 void instruction_Addi(CPU *cpu);
 void instruction_Lw(CPU *cpu);
-void instruction_Beq(CPU *cpu);
 void instruction_Sltu(CPU *cpu);
 void instruction_Addu(CPU *cpu);
+void instruction_Sh(CPU *cpu);
+void instruction_Jal(CPU *cpu);
+void instruction_Andi(CPU *cpu);
+void instruction_Sb(CPU *cpu);
+void instruction_Jr(CPU *cpu);
+void instruction_Lb(CPU *cpu);
+void instruction_Beq(CPU *cpu);
 
 // Special handlers
 void instruction_Special(CPU *cpu);
 void instruction_Mtc0(CPU *cpu);
+void instruction_Mfc0(CPU *cpu);
 
 #endif
