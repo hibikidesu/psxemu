@@ -40,9 +40,14 @@ void cpu_SetRegister(CPU *cpu, uint32_t index, uint32_t value) {
 	cpu->out_reg[0] = 0;
 }
 
+void cpu_SetLoadRegisters(CPU *cpu, uint32_t index, uint32_t value) {
+	cpu->load[0] = index;
+	cpu->load[1] = value;
+}
+
 void cpu_ExecuteInstruction(CPU *cpu) {
 	// Decode instruction bits [31:26]
-	switch (cpu->next_instruction >> 26) {
+	switch (cpu->this_instruction >> 26) {
 		case LUI:
 			instruction_Lui(cpu);
 			break;
@@ -64,18 +69,18 @@ void cpu_ExecuteInstruction(CPU *cpu) {
 		case J:
 			instruction_J(cpu);
 			break;
-		// case OR:
-		// 	instruction_Or(cpu);
-		// 	break;
+		case OR:
+			instruction_Or(cpu);
+			break;
 		case COP0:
 			cop0_Handle(cpu);
 			break;
 		case BNE:
 			instruction_Bne(cpu);
 			break;
-		// case LW:
-		// 	instruction_Lw(cpu);
-		// 	break;
+		case LW:
+			instruction_Lw(cpu);
+			break;
 		// case BEQ:
 		// 	instruction_Beq(cpu);
 		// 	break;
@@ -83,7 +88,7 @@ void cpu_ExecuteInstruction(CPU *cpu) {
 		// 	instruction_Sltu(cpu);
 		// 	break;
 		default:
-			log_Error("Unhandled Encoded Instruction 0x%08X", cpu->next_instruction);
+			log_Error("Unhandled Encoded Instruction 0x%08X", cpu->this_instruction);
 			cpu_DumpRegisters(cpu);
 			exit(1);
 			break;
@@ -98,12 +103,14 @@ void cpu_CopyRegister(CPU *cpu) {
 void cpu_NextInstruction(CPU *cpu) {
 	// Handle loading registers
 	cpu_SetRegister(cpu, cpu->load[0], cpu->load[1]);
-	cpu->load[0] = 0;
-	cpu->load[1] = 0;
+	cpu_SetLoadRegisters(cpu, 0, 0);
+
+	// Set this instruction
+	cpu->this_instruction = cpu->next_instruction;
 
 	// Get next instruction
 	cpu->next_instruction = bios_Load32(cpu->devices->bios, cpu->PC);
-	
+
 	// Incr to where the next instruction is
 	cpu->PC += 4;
 
@@ -124,12 +131,12 @@ void cpu_Reset(CPU *cpu) {
 	// Set status register
 	cpu->SR = 0;
 
-	// Set next instruction to NOP
+	// Set instructions
 	cpu->next_instruction = 0;
+	cpu->this_instruction = 0;
 
 	// Reset out and load registers
-	cpu->load[0] = 0;
-	cpu->load[1] = 0;
+	cpu_SetLoadRegisters(cpu, 0, 0);
 	memset(cpu->out_reg, 0, sizeof(cpu->out_reg));
 
 	// Clear registers
@@ -143,21 +150,6 @@ CPU *cpu_Create() {
 	// Reset CPU counter to bios
 	cpu_Reset(cpu);
 	cpu->running = 0;
-
-	// Print debug
-#if 0
-	log_HexAppendStructItem(sizeof(cpu->devices));
-	log_HexAppendStructItem(sizeof(cpu->running));
-	log_HexAppendStructItem(sizeof(cpu->registers));
-	log_HexAppendStructItem(sizeof(cpu->PC));
-	log_HexAppendStructItem(sizeof(cpu->HI));
-	log_HexAppendStructItem(sizeof(cpu->LO));
-	log_HexAppendStructItem(sizeof(cpu->SR));
-	log_HexAppendStructItem(sizeof(cpu->next_instruction));
-	log_HexAppendStructItem(sizeof(cpu->out_reg));
-	log_HexAppendStructItem(sizeof(cpu->load));
-	log_DebugHex("CPU", cpu, sizeof(CPU));
-#endif
 
 	// Return CPU object
 	return cpu;

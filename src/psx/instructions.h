@@ -105,7 +105,6 @@
 #define MTC 0b00100
 #define CTC 0b00110
 
-
 void instruction_Lui(CPU *cpu);
 void instruction_Ori(CPU *cpu);
 void instruction_SW(CPU *cpu);
