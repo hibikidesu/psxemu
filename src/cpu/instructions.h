@@ -146,6 +146,7 @@ void instruction_Sb(CPU *cpu);
 void instruction_Jr(CPU *cpu);
 void instruction_Lb(CPU *cpu);
 void instruction_Beq(CPU *cpu);
+void instruction_And(CPU *cpu);
 
 // Special handlers
 void instruction_Special(CPU *cpu);

@@ -107,7 +107,7 @@ uint8_t load_Byte(CPU *cpu, uint32_t offset) {
 
 		default:
 			log_Debug("%s Unkown memory read address 0x%X", 
-				__FUNCTION__, mask_region(new_offset));
+				__FUNCTION__, new_offset);
 			exit(1);
 			break;
 	}
@@ -138,9 +138,15 @@ uint32_t load_Int(CPU *cpu, uint32_t offset) {
 			log_Debug("Read 0x%X from 0x%X (RAM)", value, new_offset);
 			break;
 
+		// BIOS
+		case BIOS_OFFSET ... BIOS_OFFSET + BIOS_SIZE:
+			value = bios_LoadInt(cpu->devices->bios, new_offset);
+			log_Debug("Read 0x%X from 0x%X (BIOS)", value, new_offset);
+			break;
+
 		default:
 			log_Debug("%s Unkown memory read address 0x%X", 
-				__FUNCTION__, mask_region(new_offset));
+				__FUNCTION__, new_offset);
 			exit(1);
 			break;
 	}
@@ -434,13 +440,18 @@ void instruction_Sh(CPU *cpu) {
 	uint32_t addr = cpu_GetRegister(cpu, s) + i;
 
 	store_Short(cpu, addr, cpu_GetRegister(cpu, t));
+	
+	// log_Debug("0x%X: sh %s, 0x%X, %s", cpu->this_instruction, debugRegisterStrings[t], i, debugRegisterStrings[s]);
 }
  
 void instruction_Jal(CPU *cpu) {
 	// Remember our program counter in the ra register
 	cpu_SetRegister(cpu, ra, cpu->PC);
+
 	// Jump
 	instruction_J(cpu);
+
+	// log_Debug("0x%X: jal", cpu->this_instruction);
 }
 
 void instruction_Andi(CPU *cpu) {
@@ -448,7 +459,10 @@ void instruction_Andi(CPU *cpu) {
 	uint32_t t = getT(cpu->this_instruction);
 	uint32_t s = getS(cpu->this_instruction);
 	uint32_t v = cpu_GetRegister(cpu, s) & i;
+
 	cpu_SetRegister(cpu, t, v);
+
+	// log_Debug("0x%X: andi %s, %s, 0x%X", cpu->this_instruction, debugRegisterStrings[t], debugRegisterStrings[s], i);
 }
 
 void instruction_Sb(CPU *cpu) {
@@ -461,11 +475,16 @@ void instruction_Sb(CPU *cpu) {
 	uint32_t s = getS(cpu->this_instruction);
 	
 	store_Byte(cpu, cpu_GetRegister(cpu, s) + i, cpu_GetRegister(cpu, t));
+
+	// log_Debug("0x%X: sb %s, 0x%X, %s", cpu->this_instruction, debugRegisterStrings[t], i, debugRegisterStrings[s]);
 }
 
 void instruction_Jr(CPU *cpu) {
 	uint32_t s = getS(cpu->this_instruction);
 	cpu->PC = cpu_GetRegister(cpu, s);
+	log_Debug("SET PC: %d = 0x%X", s, cpu->PC);
+
+	// log_Debug("0x%X: jr %s", cpu->this_instruction, debugRegisterStrings[s]);
 }
 
 void instruction_Lb(CPU *cpu) {
@@ -475,6 +494,8 @@ void instruction_Lb(CPU *cpu) {
 	int8_t v = (int8_t)load_Byte(cpu, cpu_GetRegister(cpu, s) + i);
 
 	cpu_SetLoadRegisters(cpu, t, v);
+
+	// log_Debug("0x%X: lb %s, 0x%X, %s", cpu->this_instruction, debugRegisterStrings[t], i, debugRegisterStrings[s]);
 }
 
 void instruction_Beq(CPU *cpu) {
@@ -487,6 +508,17 @@ void instruction_Beq(CPU *cpu) {
 	}
 
 	// log_Debug("0x%X: beq %s, %s, 0x%X", cpu->this_instruction, debugRegisterStrings[s], debugRegisterStrings[t], i);
+}
+
+void instruction_And(CPU *cpu) {
+	uint32_t d = getD(cpu->this_instruction);
+	uint32_t s = getS(cpu->this_instruction);
+	uint32_t t = getT(cpu->this_instruction);
+	uint32_t v = cpu_GetRegister(cpu, s) & cpu_GetRegister(cpu, t);
+	
+	cpu_SetRegister(cpu, d, v);
+
+	// log_Debug("0x%X: and %s, %s, %s", cpu->this_instruction, debugRegisterStrings[d], debugRegisterStrings[s], debugRegisterStrings[t]);
 }
 
 //
@@ -509,6 +541,9 @@ void instruction_Special(CPU *cpu) {
 			break;
 		case JR:
 			instruction_Jr(cpu);
+			break;
+		case AND:
+			instruction_And(cpu);
 			break;
 		default:
 			log_Error("Unhandled SPECIAL Encoded Instruction 0x%08X, Subfunc 0x%X", 
@@ -557,5 +592,24 @@ void instruction_Mtc0(CPU *cpu) {
 }
 
 void instruction_Mfc0(CPU *cpu) {
-	
+	uint32_t cpu_r = getT(cpu->this_instruction);
+	uint32_t cop_r = getD(cpu->this_instruction);
+	uint32_t v = 0;
+
+	switch (cop_r) {
+		case 12:
+			v = cpu->SR;
+			break;
+		case 13:
+			log_Error("Unhandled MFC0 cause register");
+			exit(1);
+			break;
+		default:
+			log_Error("Unknown MFC0 Register 0x%X", cop_r);
+			exit(1);
+			break;
+	}
+
+	// Set delay
+	cpu_SetLoadRegisters(cpu, cpu_r, v);
 }

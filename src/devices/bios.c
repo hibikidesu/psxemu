@@ -27,7 +27,7 @@ uint32_t bios_LoadInt(BIOS *bios, uint32_t address) {
 		return utils_LoadLittleEndianInt(bios->data, address - BIOS_OFFSET);
 	}
 
-	log_Error("%S ADDRESS 0x%X NOT IN RANGE OF BIOS!!!", __FUNCTION__, address);
+	log_Error("%s ADDRESS 0x%X NOT IN RANGE OF BIOS!!!", __FUNCTION__, address);
 	exit(1);
 	return 0;
 }
