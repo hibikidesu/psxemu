@@ -1,8 +1,8 @@
 #include <stdlib.h>
 #include "utils/unity/unity.h"
 #include "tests.h"
-#include "psx/cpu.h"
-#include "psx/instructions.h"
+#include "cpu/cpu.h"
+#include "cpu/instructions.h"
 
 static CPU *cpu = NULL;
 

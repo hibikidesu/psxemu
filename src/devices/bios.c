@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include "bios.h"
-#include "utils.h"
+#include "../utils/utils.h"
 #include "../utils/logger.h"
 
 uint32_t bios_Load32(BIOS *bios, uint32_t address) {

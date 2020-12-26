@@ -3,9 +3,10 @@
 #include <stdio.h>
 #include <string.h>
 #include "cpu.h"
-#include "bios.h"
 #include "instructions.h"
 #include "coprocessors/cop0.h"
+#include "../devices/devices.h"
+#include "../devices/bios.h"
 #include "../utils/logger.h"
 #include "../utils/ansi.h"
 

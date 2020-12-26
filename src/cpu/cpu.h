@@ -2,7 +2,7 @@
 #define PSX_CPU
 
 #include <stdint.h>
-#include "devices.h"
+#include "../devices/devices.h"
 
 #include <stdint.h>
 

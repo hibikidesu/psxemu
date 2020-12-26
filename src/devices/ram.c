@@ -2,7 +2,7 @@
 #include <stdint.h>
 #include <string.h>
 #include "ram.h"
-#include "utils.h"
+#include "../utils/utils.h"
 #include "../utils/logger.h"
 
 uint8_t ram_Load32(RAM *ram, uint32_t address) {

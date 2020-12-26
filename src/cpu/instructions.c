@@ -2,9 +2,9 @@
 #include <stdlib.h>
 #include "instructions.h"
 #include "cpu.h"
-#include "utils.h"
-#include "ram.h"
-#include "bios.h"
+#include "../utils/utils.h"
+#include "../devices/ram.h"
+#include "../devices/bios.h"
 #include "../utils/logger.h"
 
 //
