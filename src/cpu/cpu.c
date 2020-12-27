@@ -115,6 +115,24 @@ void cpu_ExecuteInstruction(CPU *cpu) {
 		case BEQ:
 			instruction_Beq(cpu);
 			break;
+		case BGTZ:
+			instruction_Bgtz(cpu);
+			break;
+		case BLEZ:
+			instruction_Blez(cpu);
+			break;
+		case LBU:
+			instruction_Lbu(cpu);
+			break;
+		case SLTIU:
+			instruction_Sltiu(cpu);
+			break;
+		case REGIMM:
+			instruction_Bxx(cpu);
+			break;
+		case SLTI:
+			instruction_Slti(cpu);
+			break;
 		default:
 			log_Error("Unhandled Encoded Instruction 0x%08X", cpu->this_instruction);
 			cpu_DumpRegisters(cpu);
@@ -180,8 +198,10 @@ void cpu_Reset(CPU *cpu) {
 	// Beginning of bios
 	cpu->PC = BIOS_OFFSET;
 
-	// Set status register
+	// Set status register and HI, LO
 	cpu->SR = 0;
+	cpu->HI = 0;
+	cpu->LO = 0;
 
 	// Set instructions
 	cpu->next_instruction = 0;

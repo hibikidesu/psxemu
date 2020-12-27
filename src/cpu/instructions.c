@@ -1,5 +1,6 @@
 #include <stdint.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include "instructions.h"
 #include "cpu.h"
 #include "../utils/utils.h"
@@ -91,23 +92,24 @@ uint8_t load_Byte(CPU *cpu, uint32_t offset) {
 		// Load from bios
 		case BIOS_OFFSET ... BIOS_OFFSET + BIOS_SIZE:
 			value = bios_LoadByte(cpu->devices->bios, new_offset);
-			// log_Debug("Read 0x%X from 0x%X (BIOS)", value, new_offset);
+			log_Debug("Read byte 0x%X from 0x%X (BIOS)", value, new_offset);
 			break;
 
 		// Expansion 1
 		case EXPANSION_1_OFFSET ... EXPANSION_1_OFFSET + EXPANSION_1_SIZE:
 			// Unimplemented
 			value = 0xff;
+			log_Debug("Unimplemented Expansion 1 Read");
 			break;
 
 		// RAM
 		case RAM_OFFSET ... RAM_OFFSET + RAM_SIZE:
 			value = ram_LoadByte(cpu->devices->ram, new_offset);
-			// log_Debug("Read byte 0x%X from 0x%X (RAM)", value, new_offset);
+			log_Debug("Read byte 0x%X from 0x%X (RAM)", value, new_offset);
 			break;
 
 		default:
-			log_Debug("%s Unkown memory read address 0x%X", 
+			log_Error("%s Unkown memory read address 0x%X", 
 				__FUNCTION__, new_offset);
 			exit(1);
 			break;
@@ -118,7 +120,7 @@ uint8_t load_Byte(CPU *cpu, uint32_t offset) {
 
 uint16_t load_Short(CPU *cpu, uint32_t offset) {
 	// uint32_t new_offset;
-	log_Debug("%s UNIMPLEMENTED", __FUNCTION__);
+	log_Error("%s UNIMPLEMENTED", __FUNCTION__);
 	exit(1);
 }
 
@@ -136,18 +138,25 @@ uint32_t load_Int(CPU *cpu, uint32_t offset) {
 		// Load from ram
 		case RAM_OFFSET ... RAM_OFFSET + RAM_SIZE:
 			value = ram_LoadInt(cpu->devices->ram, new_offset);
-			// log_Debug("Read 0x%X from 0x%X (RAM)", value, new_offset);
+			log_Debug("Read int 0x%X from 0x%X (RAM)", value, new_offset);
 			break;
 
 		// BIOS
 		case BIOS_OFFSET ... BIOS_OFFSET + BIOS_SIZE:
 			value = bios_LoadInt(cpu->devices->bios, new_offset);
-			// log_Debug("Read 0x%X from 0x%X (BIOS)", value, new_offset);
+			log_Debug("Read int 0x%X from 0x%X (BIOS)", value, new_offset);
+			break;
+
+		// Interrupt Control
+		case IRQ_CONTROL_OFFSET ... IRQ_CONTROL_OFFSET + IRQ_CONTROL_SIZE:
+			log_Debug("Unimplemented Interrupt Control Read");
+			value = 0x0;
 			break;
 
 		default:
-			log_Debug("%s Unkown memory read address 0x%X", 
+			log_Error("%s Unkown memory read address 0x%X", 
 				__FUNCTION__, new_offset);
+			ram_Dump(cpu->devices->ram, "ram.bin");
 			exit(1);
 			break;
 	}
@@ -162,12 +171,13 @@ void store_Byte(CPU *cpu, uint32_t offset, uint8_t value) {
 	switch (new_offset) {
 		// Expansion 2 IO (Debugging?)
 		case EXPANSION_2_OFFSET ... EXPANSION_2_OFFSET + EXPANSION_2_SIZE:
-			// log_Debug("Unimplemented call to SPU");
+			log_Debug("Unimplemented store to SPU");
 			break;
 
 		// RAM
 		case RAM_OFFSET ... RAM_OFFSET + RAM_SIZE:
 			ram_StoreByte(cpu->devices->ram, new_offset, value);
+			log_Debug("Stored byte at 0x%X", new_offset);
 			break;
 
 		default:
@@ -191,7 +201,12 @@ void store_Short(CPU *cpu, uint32_t offset, uint16_t value) {
 	switch (new_offset) {
 		// SPU
 		case SPU_OFFSET ... SPU_OFFSET + SPU_SIZE:
-			// log_Debug("Unimplemented call to SPU");
+			log_Debug("Unimplemented store to SPU");
+			break;
+
+		// TIMERS
+		case TIMERS_OFFSET ... TIMERS_OFFSET + TIMERS_SIZE:
+			log_Debug("Unimplemented timer store");
 			break;
 
 		default:
@@ -223,22 +238,28 @@ void store_Int(CPU *cpu, uint32_t offset, uint32_t value) {
 
 		// Write into MEM_CONTROL
 		case MEM_IO ... MEM_IO + MEM_IO_SIZE:
-			// log_Debug("MEM_CONTROL write");
+			log_Debug("MEM_CONTROL write");
 			break;
 		
 		// Ignore RAM configuration
 		case RAM_CONFIG ... RAM_CONFIG + RAM_CONFIG_SIZE:
-			// log_Debug("RAM_CONFIG write");
+			log_Debug("RAM_CONFIG write");
 			break;
 
 		// Cache Control
 		case CACHE_CONTROL ... CACHE_CONTROL + CACHE_CONTROL_SIZE:
-			// log_Debug("CACHE_CONTROL write");
+			log_Debug("CACHE_CONTROL write");
+			break;
+
+		case IRQ_CONTROL_OFFSET ... IRQ_CONTROL_OFFSET + IRQ_CONTROL_SIZE:
+			log_Debug("Unimplemented Interrupt Control Read");
+			value = 0x0;
 			break;
 
 		// RAM Area
 		case RAM_OFFSET ... RAM_OFFSET + RAM_SIZE:
 			ram_StoreInt(cpu->devices->ram, new_offset, value);
+			log_Debug("Stored int at 0x%X", new_offset);
 			break;
 
 		default:
@@ -495,7 +516,6 @@ void instruction_Sb(CPU *cpu) {
 
 void instruction_Jr(CPU *cpu) {
 	uint32_t s = getS(cpu->this_instruction);
-	uint32_t old_pc = cpu->PC;
 	cpu->PC = cpu_GetRegister(cpu, s);
 	// log_Debug("SET PC: %s = 0x%X FROM 0x%X WITH %s", debugRegisterStrings[s], cpu->PC, old_pc, debugRegisterStrings[s]);
 	// log_Debug("0x%X: jr %s", cpu->this_instruction, debugRegisterStrings[s]);
@@ -538,8 +558,8 @@ void instruction_And(CPU *cpu) {
 
 void instruction_Add(CPU *cpu) {
 	uint32_t s = getS(cpu->this_instruction);
-	uint32_t t = getT(cpu->next_instruction);
-	uint32_t d = getD(cpu->next_instruction);
+	uint32_t t = getT(cpu->this_instruction);
+	uint32_t d = getD(cpu->this_instruction);
 
 	int32_t s_new = (int32_t)cpu_GetRegister(cpu, s);
 	int32_t t_new = (int32_t)cpu_GetRegister(cpu, t);
@@ -553,6 +573,137 @@ void instruction_Add(CPU *cpu) {
 	uint32_t v = s_new + t_new;
 
 	cpu_SetRegister(cpu, d, v);
+}
+
+void instruction_Lbu(CPU *cpu) {
+	uint32_t i = getISE(cpu->this_instruction);
+	uint32_t t = getT(cpu->this_instruction);
+	uint32_t s = getS(cpu->this_instruction);
+	uint32_t addr = cpu_GetRegister(cpu, s) + i;
+	uint32_t v = load_Byte(cpu, addr);
+
+	cpu_SetLoadRegisters(cpu, t, v);
+}
+
+void instruction_Bgtz(CPU *cpu) {
+	uint32_t i = getISE(cpu->this_instruction);
+	uint32_t s = getS(cpu->this_instruction);
+	int32_t v = (int32_t)cpu_GetRegister(cpu, s);
+
+	if (v > 0) {
+		branch(cpu, i);
+	}
+}
+
+void instruction_Blez(CPU *cpu) {
+	uint32_t i = getISE(cpu->this_instruction);
+	uint32_t s = getS(cpu->this_instruction);
+	int32_t v = (int32_t)cpu_GetRegister(cpu, s);
+
+	if (v <= 0) {
+		branch(cpu, i);
+	}
+}
+
+void instruction_Jalr(CPU *cpu) {
+	uint32_t d = getD(cpu->this_instruction);
+	uint32_t s = getS(cpu->this_instruction);
+	cpu_SetRegister(cpu, d, cpu->PC);
+	cpu->PC = cpu_GetRegister(cpu, s);
+}
+
+void instruction_Slti(CPU *cpu) {
+	int32_t i = getISE(cpu->this_instruction);
+	uint32_t s = getS(cpu->this_instruction);
+	uint32_t t = getT(cpu->this_instruction);
+	uint32_t v = ((int32_t)cpu_GetRegister(cpu, s)) < i;
+
+	cpu_SetRegister(cpu, t, (uint32_t)v);
+}
+
+void instruction_Sltiu(CPU *cpu) {
+	uint32_t i = getISE(cpu->this_instruction);
+	uint32_t s = getS(cpu->this_instruction);
+	uint32_t t = getT(cpu->this_instruction);
+	uint32_t v = cpu_GetRegister(cpu, s) < i;
+
+	cpu_SetRegister(cpu, t, v);
+}
+
+void instruction_Subu(CPU *cpu) {
+	uint32_t s = getS(cpu->this_instruction);
+	uint32_t t = getT(cpu->this_instruction);
+	uint32_t d = getD(cpu->this_instruction);
+	uint32_t v = cpu_GetRegister(cpu, s) - cpu_GetRegister(cpu, t);
+
+	cpu_SetRegister(cpu, d, v);
+}
+
+void instruction_Sra(CPU *cpu) {
+	uint32_t i = getShift(cpu->this_instruction);
+	uint32_t t = getT(cpu->this_instruction);
+	uint32_t d = getD(cpu->this_instruction);
+	int32_t v = ((int32_t)cpu_GetRegister(cpu, t)) >> i;
+
+	cpu_SetRegister(cpu, d, (uint32_t)v);
+}
+
+void instruction_Div(CPU *cpu) {
+	uint32_t s = getS(cpu->this_instruction);
+	uint32_t t = getT(cpu->this_instruction);
+	int32_t n = (int32_t)cpu_GetRegister(cpu, s);
+	int32_t d = (int32_t)cpu_GetRegister(cpu, t);
+
+	if (d == 0) {
+		// Division By 0
+		cpu->HI = (uint32_t)n;
+		if (n >= 0) {
+			cpu->LO = 0xffffffff;
+		} else {
+			cpu->LO = 1;
+		}
+	} else if (((uint32_t)n) == 0x80000000 && d == -1) {
+		// If not representable in 32bit
+		// Signed int
+		cpu->HI = 0;
+		cpu->LO = 0x80000000;
+	} else {
+		cpu->HI = (uint32_t)(n % d);
+		cpu->LO = (uint32_t)(n / d);
+	}
+}
+
+void instruction_Mflo(CPU *cpu) {
+	// Move LO to a register
+	uint32_t d = getD(cpu->this_instruction);
+	cpu_SetRegister(cpu, d, cpu->LO);
+}
+
+void instruction_Srl(CPU *cpu) {
+	uint32_t i = getShift(cpu->this_instruction);
+	uint32_t t = getT(cpu->this_instruction);
+	uint32_t d = getD(cpu->this_instruction);
+	uint32_t v = cpu_GetRegister(cpu, t) >> i;
+
+	cpu_SetRegister(cpu, d, v);
+}
+
+void instruction_Divu(CPU *cpu) {
+	// Unsigned division
+	uint32_t s = getS(cpu->this_instruction);
+	uint32_t t = getT(cpu->this_instruction);
+
+	uint32_t n = cpu_GetRegister(cpu, s);
+	uint32_t d = cpu_GetRegister(cpu, t);
+
+	if (d == 0) {
+		// Division By 0
+		cpu->HI = n;
+		cpu->LO = 0xffffffff;
+	} else {
+		cpu->HI = n % d;
+		cpu->LO = n / d;
+	}
 }
 
 //
@@ -582,11 +733,52 @@ void instruction_Special(CPU *cpu) {
 		case ADD:
 			instruction_Add(cpu);
 			break;
+		case JALR:
+			instruction_Jalr(cpu);
+			break;
+		case SUBU:
+			instruction_Subu(cpu);
+			break;
+		case SRA:
+			instruction_Sra(cpu);
+			break;
+		case DIV:
+			instruction_Div(cpu);
+			break;
+		case MFLO:
+			instruction_Mflo(cpu);
+			break;
+		case SRL:
+			instruction_Srl(cpu);
+			break;
+		case DIVU:
+			instruction_Divu(cpu);
+			break;
 		default:
 			log_Error("Unhandled SPECIAL Encoded Instruction 0x%08X, Subfunc 0x%X", 
 				cpu->this_instruction, getSubfunc(cpu->this_instruction));
 			exit(1);
 			break;
+	}
+}
+
+void instruction_Bxx(CPU *cpu) {
+	// notlikebep
+	uint32_t i = getISE(cpu->this_instruction);
+	uint32_t s = getS(cpu->this_instruction);
+
+	bool isBgez = (cpu->this_instruction >> 16) & 1;
+	bool isLink = ((cpu->this_instruction >> 17) & 0xf) == 8;
+
+	int32_t v = (int32_t)cpu_GetRegister(cpu, s);
+	uint32_t test = ((uint32_t)(v < 0)) ^ isBgez;
+
+	if (isLink) {
+		cpu_SetRegister(cpu, ra, cpu->PC);
+	}
+
+	if (test != 0) {
+		branch(cpu, i);
 	}
 }
 

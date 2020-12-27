@@ -23,6 +23,14 @@
 #define EXPANSION_2_OFFSET 0x1F802000
 #define EXPANSION_2_SIZE 66
 
+// Interrupt Registers
+#define IRQ_CONTROL_OFFSET 0x1F801070
+#define IRQ_CONTROL_SIZE 8
+
+// Timers
+#define TIMERS_OFFSET 0x1f801100
+#define TIMERS_SIZE 0x30
+
 // KSEG2
 #define CACHE_CONTROL 0xFFFE0130
 #define CACHE_CONTROL_SIZE 4
@@ -69,8 +77,8 @@
 #define ADDIU 0b001001
 #define AND   0b100100
 #define ANDI  0b001100
-// #define DIV   0b011010
-// #define DIVU  0b011011
+#define DIV   0b011010
+#define DIVU  0b011011
 // #define MULT  0b011000
 // #define MULTU 0b011001
 // #define NOR   0b100111
@@ -78,30 +86,30 @@
 #define ORI   0b001101
 #define SLL   0b000000
 // #define SLLV  0b000100
-// #define SRA   0b000011
+#define SRA   0b000011
 // #define SRAV  0b000111
-// #define SRL   0b000010
+#define SRL   0b000010
 // #define SRLV  0b000110
 // #define SUB   0b100010
-// #define SUBU  0b100011
+#define SUBU  0b100011
 // #define XOR   0b100110
 // #define XORI  0b001110
 // #define LHI   0b011001
 // #define LLO   0b011000
 // #define SLT   0b101010
 #define SLTU  0b101011
-// #define SLTI  0b001010
-// #define SLTIU 0b001001
+#define SLTI  0b001010
+#define SLTIU 0b001011
 #define BEQ   0b000100
-// #define BGTZ  0b000111
-// #define BLEZ  0b000110
+#define BGTZ  0b000111
+#define BLEZ  0b000110
 #define BNE   0b000101
 #define J     0b000010
 #define JAL   0b000011
-// #define JALR  0b001001
+#define JALR  0b001001
 #define JR    0b001000
 #define LB    0b100000
-// #define LBU   0b100100
+#define LBU   0b100100
 // #define LH    0b100001
 // #define LHU   0b100101
 #define LW    0b100011
@@ -109,7 +117,7 @@
 #define SH    0b101001
 #define SW    0b101011
 // #define MFHI  0b010000
-// #define MFLO  0b010010
+#define MFLO  0b010010
 // #define MTHI  0b010001
 // #define MTLO  0b010011
 // #define TRAP  0b011010
@@ -122,6 +130,7 @@
 #define CTC 0b00110
 
 #define SPECIAL 0b000000
+#define REGIMM  0b000001
 
 // Helpers
 uint32_t mask_region(uint32_t address);
@@ -148,9 +157,22 @@ void instruction_Lb(CPU *cpu);
 void instruction_Beq(CPU *cpu);
 void instruction_And(CPU *cpu);
 void instruction_Add(CPU *cpu);
+void instruction_Lbu(CPU *cpu);
+void instruction_Bgtz(CPU *cpu);
+void instruction_Blez(CPU *cpu);
+void instruction_Jalr(CPU *cpu);
+void instruction_Slti(CPU *cpu);
+void instruction_Sltiu(CPU *cpu);
+void instruction_Subu(CPU *cpu);
+void instruction_Sra(CPU *cpu);
+void instruction_Div(CPU *cpu);
+void instruction_Mflo(CPU *cpu);
+void instruction_Srl(CPU *cpu);
+void instruction_Divu(CPU *cpu);
 
 // Special handlers
 void instruction_Special(CPU *cpu);
+void instruction_Bxx(CPU *cpu);
 void instruction_Mtc0(CPU *cpu);
 void instruction_Mfc0(CPU *cpu);
 
