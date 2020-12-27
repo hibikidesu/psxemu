@@ -271,8 +271,8 @@ void store_Int(CPU *cpu, uint32_t offset, uint32_t value) {
 
 void branch(CPU *cpu, uint32_t offset) {
 	uint32_t u = offset << 2;
-	cpu->PC += u;
-	cpu->PC -= 4;
+	cpu->NEXT_PC = cpu->PC + u;
+	// cpu->PC -= 4;
 }
 
 // https://www.eg.bucknell.edu/~csci320/mips_web/
@@ -373,7 +373,7 @@ void instruction_Addiu(CPU *cpu) {
 
 void instruction_J(CPU *cpu) {
 	uint32_t i = getJump(cpu->this_instruction);
-	cpu->PC = (cpu->PC & 0xf0000000) | (i << 2);
+	cpu->NEXT_PC = (cpu->PC & 0xf0000000) | (i << 2);
 	// log_Debug("JUMP TO 0x%X", cpu->PC);
 
 	// log_Debug("0x%X: j 0x%X", cpu->this_instruction, i);
@@ -479,7 +479,7 @@ void instruction_Sh(CPU *cpu) {
  
 void instruction_Jal(CPU *cpu) {
 	// Remember our program counter in the ra register
-	cpu_SetRegister(cpu, ra, cpu->PC);
+	cpu_SetRegister(cpu, ra, cpu->NEXT_PC);
 
 	// Jump
 	instruction_J(cpu);
@@ -515,8 +515,7 @@ void instruction_Sb(CPU *cpu) {
 
 void instruction_Jr(CPU *cpu) {
 	uint32_t s = getS(cpu->this_instruction);
-	cpu->PC = cpu_GetRegister(cpu, s);
-	// log_Debug("SET PC: %s = 0x%X FROM 0x%X WITH %s", debugRegisterStrings[s], cpu->PC, old_pc, debugRegisterStrings[s]);
+	cpu->NEXT_PC = cpu_GetRegister(cpu, s);
 	// log_Debug("0x%X: jr %s", cpu->this_instruction, debugRegisterStrings[s]);
 }
 
@@ -607,8 +606,8 @@ void instruction_Blez(CPU *cpu) {
 void instruction_Jalr(CPU *cpu) {
 	uint32_t d = getD(cpu->this_instruction);
 	uint32_t s = getS(cpu->this_instruction);
-	cpu_SetRegister(cpu, d, cpu->PC);
-	cpu->PC = cpu_GetRegister(cpu, s);
+	cpu_SetRegister(cpu, d, cpu->NEXT_PC);
+	cpu->NEXT_PC = cpu_GetRegister(cpu, s);
 }
 
 void instruction_Slti(CPU *cpu) {
@@ -801,7 +800,7 @@ void instruction_Bxx(CPU *cpu) {
 	uint32_t test = ((uint32_t)(v < 0)) ^ isBgez;
 
 	if (isLink) {
-		cpu_SetRegister(cpu, ra, cpu->PC);
+		cpu_SetRegister(cpu, ra, cpu->NEXT_PC);
 	}
 
 	if (test != 0) {

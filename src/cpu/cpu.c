@@ -152,11 +152,11 @@ void cpu_FetchInstruction(CPU *cpu) {
 	switch (offset) {
 		// BIOS
 		case BIOS_OFFSET ... BIOS_OFFSET + BIOS_SIZE:
-			cpu->next_instruction = bios_LoadInt(cpu->devices->bios, offset);
+			cpu->this_instruction = bios_LoadInt(cpu->devices->bios, offset);
 			break;
 		// RAM
 		case RAM_OFFSET ... RAM_OFFSET + RAM_SIZE:
-			cpu->next_instruction = ram_LoadInt(cpu->devices->ram, offset);
+			cpu->this_instruction = ram_LoadInt(cpu->devices->ram, offset);
 			break;
 		default:
 			log_Error("Unknown PC Region 0x%X", offset);
@@ -167,13 +167,14 @@ void cpu_FetchInstruction(CPU *cpu) {
 
 void cpu_NextInstruction(CPU *cpu) {
 	// Set this instruction
-	cpu->this_instruction = cpu->next_instruction;
+	// cpu->this_instruction = cpu->next_instruction;
 
 	// Get next instruction
 	cpu_FetchInstruction(cpu);
 
 	// Incr to where the next instruction is
-	cpu->PC += 4;
+	cpu->PC = cpu->NEXT_PC;
+	cpu->NEXT_PC = cpu->PC + 4;
 
 	// Handle loading registers
 	cpu_SetRegister(cpu, cpu->load[0], cpu->load[1]);
