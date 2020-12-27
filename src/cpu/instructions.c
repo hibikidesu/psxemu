@@ -91,7 +91,7 @@ uint8_t load_Byte(CPU *cpu, uint32_t offset) {
 		// Load from bios
 		case BIOS_OFFSET ... BIOS_OFFSET + BIOS_SIZE:
 			value = bios_LoadByte(cpu->devices->bios, new_offset);
-			log_Debug("Read 0x%X from 0x%X (BIOS)", value, new_offset);
+			// log_Debug("Read 0x%X from 0x%X (BIOS)", value, new_offset);
 			break;
 
 		// Expansion 1
@@ -103,7 +103,7 @@ uint8_t load_Byte(CPU *cpu, uint32_t offset) {
 		// RAM
 		case RAM_OFFSET ... RAM_OFFSET + RAM_SIZE:
 			value = ram_LoadByte(cpu->devices->ram, new_offset);
-			log_Debug("Read byte 0x%X from 0x%X (RAM)", value, new_offset);
+			// log_Debug("Read byte 0x%X from 0x%X (RAM)", value, new_offset);
 			break;
 
 		default:
@@ -136,13 +136,13 @@ uint32_t load_Int(CPU *cpu, uint32_t offset) {
 		// Load from ram
 		case RAM_OFFSET ... RAM_OFFSET + RAM_SIZE:
 			value = ram_LoadInt(cpu->devices->ram, new_offset);
-			log_Debug("Read 0x%X from 0x%X (RAM)", value, new_offset);
+			// log_Debug("Read 0x%X from 0x%X (RAM)", value, new_offset);
 			break;
 
 		// BIOS
 		case BIOS_OFFSET ... BIOS_OFFSET + BIOS_SIZE:
 			value = bios_LoadInt(cpu->devices->bios, new_offset);
-			log_Debug("Read 0x%X from 0x%X (BIOS)", value, new_offset);
+			// log_Debug("Read 0x%X from 0x%X (BIOS)", value, new_offset);
 			break;
 
 		default:
@@ -162,7 +162,7 @@ void store_Byte(CPU *cpu, uint32_t offset, uint8_t value) {
 	switch (new_offset) {
 		// Expansion 2 IO (Debugging?)
 		case EXPANSION_2_OFFSET ... EXPANSION_2_OFFSET + EXPANSION_2_SIZE:
-			log_Debug("Unimplemented call to SPU");
+			// log_Debug("Unimplemented call to SPU");
 			break;
 
 		// RAM
@@ -191,7 +191,7 @@ void store_Short(CPU *cpu, uint32_t offset, uint16_t value) {
 	switch (new_offset) {
 		// SPU
 		case SPU_OFFSET ... SPU_OFFSET + SPU_SIZE:
-			log_Debug("Unimplemented call to SPU");
+			// log_Debug("Unimplemented call to SPU");
 			break;
 
 		default:
@@ -223,17 +223,17 @@ void store_Int(CPU *cpu, uint32_t offset, uint32_t value) {
 
 		// Write into MEM_CONTROL
 		case MEM_IO ... MEM_IO + MEM_IO_SIZE:
-			log_Debug("MEM_CONTROL write");
+			// log_Debug("MEM_CONTROL write");
 			break;
 		
 		// Ignore RAM configuration
 		case RAM_CONFIG ... RAM_CONFIG + RAM_CONFIG_SIZE:
-			log_Debug("RAM_CONFIG write");
+			// log_Debug("RAM_CONFIG write");
 			break;
 
 		// Cache Control
 		case CACHE_CONTROL ... CACHE_CONTROL + CACHE_CONTROL_SIZE:
-			log_Debug("CACHE_CONTROL write");
+			// log_Debug("CACHE_CONTROL write");
 			break;
 
 		// RAM Area
@@ -297,7 +297,7 @@ void instruction_Lui(CPU *cpu) {
 	uint32_t v = i << 16;
 
 	cpu_SetRegister(cpu, t, v);
-	log_Debug("0x%X: lui %s, 0x%04X", cpu->this_instruction, debugRegisterStrings[t], i);
+	// log_Debug("0x%X: lui %s, 0x%04X", cpu->this_instruction, debugRegisterStrings[t], i);
 }
 
 void instruction_Ori(CPU *cpu) {
@@ -307,7 +307,7 @@ void instruction_Ori(CPU *cpu) {
 	uint32_t v = cpu_GetRegister(cpu, s) | i;
 
 	cpu_SetRegister(cpu, t, v);
-	log_Debug("0x%X: ori %s, %s, 0x%04X", cpu->this_instruction, debugRegisterStrings[t], debugRegisterStrings[s], i);
+	// log_Debug("0x%X: ori %s, %s, 0x%04X", cpu->this_instruction, debugRegisterStrings[t], debugRegisterStrings[s], i);
 }
 
 void instruction_SW(CPU *cpu) {
@@ -326,7 +326,7 @@ void instruction_SW(CPU *cpu) {
 
 	store_Int(cpu, addr, v);
 
-	log_Debug("0x%X: sw %s, 0x%X, %s", cpu->this_instruction, debugRegisterStrings[t], i, debugRegisterStrings[s]);
+	// log_Debug("0x%X: sw %s, 0x%X, %s", cpu->this_instruction, debugRegisterStrings[t], i, debugRegisterStrings[s]);
 }
 
 void instruction_Sll(CPU *cpu) {
@@ -337,7 +337,7 @@ void instruction_Sll(CPU *cpu) {
 
 	cpu_SetRegister(cpu, d, v);
 
-	log_Debug("0x%08X: sll %s, %s, 0x%X", cpu->this_instruction, debugRegisterStrings[d], debugRegisterStrings[t], i);
+	// log_Debug("0x%08X: sll %s, %s, 0x%X", cpu->this_instruction, debugRegisterStrings[d], debugRegisterStrings[t], i);
 }
 
 void instruction_Addiu(CPU *cpu) {
@@ -348,15 +348,15 @@ void instruction_Addiu(CPU *cpu) {
 
 	cpu_SetRegister(cpu, t, v);
 
-	log_Debug("0x%X: addiu %s, %s, 0x%X", cpu->this_instruction, debugRegisterStrings[t], debugRegisterStrings[s], i);
+	// log_Debug("0x%X: addiu %s, %s, 0x%X", cpu->this_instruction, debugRegisterStrings[t], debugRegisterStrings[s], i);
 }
 
 void instruction_J(CPU *cpu) {
 	uint32_t i = getJump(cpu->this_instruction);
 	cpu->PC = (cpu->PC & 0xf0000000) | (i << 2);
-	log_Debug("JUMP TO 0x%X", cpu->PC);
+	// log_Debug("JUMP TO 0x%X", cpu->PC);
 
-	log_Debug("0x%X: j 0x%X", cpu->this_instruction, i);
+	// log_Debug("0x%X: j 0x%X", cpu->this_instruction, i);
 }
 
 void instruction_Or(CPU *cpu) {
@@ -367,7 +367,7 @@ void instruction_Or(CPU *cpu) {
 
 	cpu_SetRegister(cpu, d, v);
 
-	log_Debug("0x%X: or %s, %s, %s", cpu->this_instruction, debugRegisterStrings[d], debugRegisterStrings[s], debugRegisterStrings[t]);
+	// log_Debug("0x%X: or %s, %s, %s", cpu->this_instruction, debugRegisterStrings[d], debugRegisterStrings[s], debugRegisterStrings[t]);
 }
 
 void instruction_Bne(CPU *cpu) {
@@ -380,7 +380,7 @@ void instruction_Bne(CPU *cpu) {
 		branch(cpu, i);
 	}
 
-	log_Debug("0x%X: bne %s, %s, 0x%X", cpu->this_instruction, debugRegisterStrings[s], debugRegisterStrings[t], i);
+	// log_Debug("0x%X: bne %s, %s, 0x%X", cpu->this_instruction, debugRegisterStrings[s], debugRegisterStrings[t], i);
 }
 
 void instruction_Addi(CPU *cpu) {
@@ -398,7 +398,7 @@ void instruction_Addi(CPU *cpu) {
 	uint32_t v = new_s + i;
 	cpu_SetRegister(cpu, t, v);
 
-	log_Debug("0x%X: addi %s, %s, 0x%X", cpu->this_instruction, debugRegisterStrings[t], debugRegisterStrings[s], i);
+	// log_Debug("0x%X: addi %s, %s, 0x%X", cpu->this_instruction, debugRegisterStrings[t], debugRegisterStrings[s], i);
 }
 
 void instruction_Lw(CPU *cpu) {
@@ -416,7 +416,7 @@ void instruction_Lw(CPU *cpu) {
 	// Put load in delay slot
 	cpu_SetLoadRegisters(cpu, t, v);
 
-	log_Debug("0x%X: lw %s, 0x%X, %s", cpu->this_instruction, debugRegisterStrings[t], i, debugRegisterStrings[s]);
+	// log_Debug("0x%X: lw %s, 0x%X, %s", cpu->this_instruction, debugRegisterStrings[t], i, debugRegisterStrings[s]);
 }
 
 void instruction_Sltu(CPU *cpu) {
@@ -427,7 +427,7 @@ void instruction_Sltu(CPU *cpu) {
 
 	cpu_SetRegister(cpu, d, v);
 
-	log_Debug("0x%X: sltu %s, %s, %s", cpu->this_instruction, debugRegisterStrings[d], debugRegisterStrings[s], debugRegisterStrings[t]);
+	// log_Debug("0x%X: sltu %s, %s, %s", cpu->this_instruction, debugRegisterStrings[d], debugRegisterStrings[s], debugRegisterStrings[t]);
 }
 
 void instruction_Addu(CPU *cpu) {
@@ -438,10 +438,15 @@ void instruction_Addu(CPU *cpu) {
 
 	cpu_SetRegister(cpu, d, v);
 
-	log_Debug("0x%X: addu %s, %s, %s", cpu->this_instruction, debugRegisterStrings[d], debugRegisterStrings[s], debugRegisterStrings[t]);
+	// log_Debug("0x%X: addu %s, %s, %s", cpu->this_instruction, debugRegisterStrings[d], debugRegisterStrings[s], debugRegisterStrings[t]);
 }
 
 void instruction_Sh(CPU *cpu) {
+	if ((cpu->SR & 0x10000) != 0) {
+		// log_Debug("Ignoring store, isolated cache");
+		return;
+	}
+	
 	uint32_t i = getISE(cpu->this_instruction);
 	uint32_t t = getT(cpu->this_instruction);
 	uint32_t s = getS(cpu->this_instruction);
@@ -449,7 +454,7 @@ void instruction_Sh(CPU *cpu) {
 
 	store_Short(cpu, addr, (uint16_t)cpu_GetRegister(cpu, t));
 	
-	log_Debug("0x%X: sh %s, 0x%X, %s", cpu->this_instruction, debugRegisterStrings[t], i, debugRegisterStrings[s]);
+	// log_Debug("0x%X: sh %s, 0x%X, %s", cpu->this_instruction, debugRegisterStrings[t], i, debugRegisterStrings[s]);
 }
  
 void instruction_Jal(CPU *cpu) {
@@ -459,7 +464,7 @@ void instruction_Jal(CPU *cpu) {
 	// Jump
 	instruction_J(cpu);
 
-	log_Debug("0x%X: jal", cpu->this_instruction);
+	// log_Debug("0x%X: jal", cpu->this_instruction);
 }
 
 void instruction_Andi(CPU *cpu) {
@@ -470,7 +475,7 @@ void instruction_Andi(CPU *cpu) {
 
 	cpu_SetRegister(cpu, t, v);
 
-	log_Debug("0x%X: andi %s, %s, 0x%X", cpu->this_instruction, debugRegisterStrings[t], debugRegisterStrings[s], i);
+	// log_Debug("0x%X: andi %s, %s, 0x%X", cpu->this_instruction, debugRegisterStrings[t], debugRegisterStrings[s], i);
 }
 
 void instruction_Sb(CPU *cpu) {
@@ -485,15 +490,15 @@ void instruction_Sb(CPU *cpu) {
 	
 	store_Byte(cpu, addr, (uint8_t)cpu_GetRegister(cpu, t));
 
-	log_Debug("0x%X: sb %s, 0x%X, %s", cpu->this_instruction, debugRegisterStrings[t], i, debugRegisterStrings[s]);
+	// log_Debug("0x%X: sb %s, 0x%X, %s", cpu->this_instruction, debugRegisterStrings[t], i, debugRegisterStrings[s]);
 }
 
 void instruction_Jr(CPU *cpu) {
 	uint32_t s = getS(cpu->this_instruction);
 	uint32_t old_pc = cpu->PC;
 	cpu->PC = cpu_GetRegister(cpu, s);
-	log_Debug("SET PC: %s = 0x%X FROM 0x%X WITH %s", debugRegisterStrings[s], cpu->PC, old_pc, debugRegisterStrings[s]);
-	log_Debug("0x%X: jr %s", cpu->this_instruction, debugRegisterStrings[s]);
+	// log_Debug("SET PC: %s = 0x%X FROM 0x%X WITH %s", debugRegisterStrings[s], cpu->PC, old_pc, debugRegisterStrings[s]);
+	// log_Debug("0x%X: jr %s", cpu->this_instruction, debugRegisterStrings[s]);
 }
 
 void instruction_Lb(CPU *cpu) {
@@ -505,7 +510,7 @@ void instruction_Lb(CPU *cpu) {
 
 	cpu_SetLoadRegisters(cpu, t, (uint32_t)v);
 
-	log_Debug("0x%X: lb %s, 0x%X, %s", cpu->this_instruction, debugRegisterStrings[t], i, debugRegisterStrings[s]);
+	// log_Debug("0x%X: lb %s, 0x%X, %s", cpu->this_instruction, debugRegisterStrings[t], i, debugRegisterStrings[s]);
 }
 
 void instruction_Beq(CPU *cpu) {
@@ -517,7 +522,7 @@ void instruction_Beq(CPU *cpu) {
 		branch(cpu, i);
 	}
 
-	log_Debug("0x%X: beq %s, %s, 0x%X", cpu->this_instruction, debugRegisterStrings[s], debugRegisterStrings[t], i);
+	// log_Debug("0x%X: beq %s, %s, 0x%X", cpu->this_instruction, debugRegisterStrings[s], debugRegisterStrings[t], i);
 }
 
 void instruction_And(CPU *cpu) {
@@ -528,7 +533,26 @@ void instruction_And(CPU *cpu) {
 
 	cpu_SetRegister(cpu, d, v);
 
-	log_Debug("0x%X: and %s, %s, %s", cpu->this_instruction, debugRegisterStrings[d], debugRegisterStrings[s], debugRegisterStrings[t]);
+	// log_Debug("0x%X: and %s, %s, %s", cpu->this_instruction, debugRegisterStrings[d], debugRegisterStrings[s], debugRegisterStrings[t]);
+}
+
+void instruction_Add(CPU *cpu) {
+	uint32_t s = getS(cpu->this_instruction);
+	uint32_t t = getT(cpu->next_instruction);
+	uint32_t d = getD(cpu->next_instruction);
+
+	int32_t s_new = (int32_t)cpu_GetRegister(cpu, s);
+	int32_t t_new = (int32_t)cpu_GetRegister(cpu, t);
+
+	// Check for overflow
+	if ((s_new >= 0) && (t_new > (INT32_MAX - s_new))) {
+		log_Error("ADD OVERFLOW");
+		exit(1);
+	}
+
+	uint32_t v = s_new + t_new;
+
+	cpu_SetRegister(cpu, d, v);
 }
 
 //
@@ -554,6 +578,9 @@ void instruction_Special(CPU *cpu) {
 			break;
 		case AND:
 			instruction_And(cpu);
+			break;
+		case ADD:
+			instruction_Add(cpu);
 			break;
 		default:
 			log_Error("Unhandled SPECIAL Encoded Instruction 0x%08X, Subfunc 0x%X", 

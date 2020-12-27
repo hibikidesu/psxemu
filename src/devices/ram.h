@@ -6,6 +6,7 @@
 // KSEG1
 #define RAM_OFFSET 0x0
 #define RAM_SIZE 2 * 1024 * 1024
+#define RAM_BIOS_SIZE 64 * 1024  // 64K for bios
 
 typedef struct {
 	uint8_t data[RAM_SIZE];

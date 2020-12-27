@@ -63,7 +63,7 @@
 
 // Instructions
 #define LUI   0b001111
-// #define ADD   0b100000
+#define ADD   0b100000
 #define ADDU  0b100001
 #define ADDI  0b001000
 #define ADDIU 0b001001
@@ -147,6 +147,7 @@ void instruction_Jr(CPU *cpu);
 void instruction_Lb(CPU *cpu);
 void instruction_Beq(CPU *cpu);
 void instruction_And(CPU *cpu);
+void instruction_Add(CPU *cpu);
 
 // Special handlers
 void instruction_Special(CPU *cpu);

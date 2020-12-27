@@ -62,8 +62,8 @@ void cpu_SetLoadRegisters(CPU *cpu, uint32_t index, uint32_t value) {
 }
 
 void cpu_ExecuteInstruction(CPU *cpu) {
-	log_Debug("Current Instruction: 0x%08X, Next Instruction: 0x%08X, PC: 0x%08X, SR: 0x%08X", 
-		cpu->this_instruction, cpu->next_instruction, cpu->PC, cpu->SR);
+	// log_Debug("Current Instruction: 0x%08X, Next Instruction: 0x%08X, PC: 0x%08X, SR: 0x%08X", 
+	// 	cpu->this_instruction, cpu->next_instruction, cpu->PC, cpu->SR);
 	// Decode instruction bits [31:26]
 	switch (cpu->this_instruction >> 26) {
 		// SPECIAL
@@ -128,12 +128,36 @@ void cpu_CopyRegister(CPU *cpu) {
 	memcpy(cpu->registers, cpu->out_reg, sizeof(cpu->registers));
 }
 
+void cpu_FetchInstruction(CPU *cpu) {
+	uint32_t offset = mask_region(cpu->PC);
+
+	switch (offset) {
+		// BIOS
+		case BIOS_OFFSET ... BIOS_OFFSET + BIOS_SIZE:
+			cpu->next_instruction = bios_LoadInt(cpu->devices->bios, offset);
+			break;
+		// RAM
+		case RAM_OFFSET ... RAM_OFFSET + RAM_BIOS_SIZE:
+			cpu->next_instruction = ram_LoadInt(cpu->devices->ram, offset);
+			break;
+		default:
+			log_Error("Unknown PC Region");
+			exit(1);
+			break;
+	}
+}
+
 void cpu_NextInstruction(CPU *cpu) {
 	// Set this instruction
 	cpu->this_instruction = cpu->next_instruction;
 
+	// Dump
+	// if (cpu->PC == 0xA0000500) {
+	// 	ram_Dump(cpu->devices->ram, "ram.bin");
+	// }
+
 	// Get next instruction
-	cpu->next_instruction = bios_LoadInt(cpu->devices->bios, cpu->PC);
+	cpu_FetchInstruction(cpu);
 
 	// Incr to where the next instruction is
 	cpu->PC += 4;
