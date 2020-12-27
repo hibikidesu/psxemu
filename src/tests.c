@@ -3,21 +3,153 @@
 #include "utils/unity/unity.h"
 #include "tests.h"
 #include "cpu/cpu.h"
+#include "devices/devices.h"
+#include "devices/ram.h"
 #include "cpu/instructions.h"
 #include "utils/logger.h"
 
 static CPU *cpu = NULL;
 
 void setUp() {
+	DEVICES *devices = devices_Create();
+	RAM *ram = ram_Create();
+	devices_AddRAM(devices, ram);
+
 	cpu = cpu_Create();
+	cpu_AddDevices(cpu, devices);
 }
 
 void tearDown() {
-	free(cpu);
+	free(cpu->devices->ram);
+	free(cpu->devices);
+	cpu_Destroy(cpu);
 }
 
 void test_function_bios_address(void) {
 	TEST_ASSERT_EQUAL_UINT32(cpu->PC, BIOS_OFFSET);
+}
+
+//
+// Logic
+//
+
+void test_function_ins_addu(void) {
+	// ADDU $t0, $t0, $t1 (0x0 + 0x0)
+	cpu->registers[t0] = 0x0;
+	cpu->registers[t1] = 0x0;
+	cpu->this_instruction = 0x01094021;
+	instruction_Addu(cpu);
+	TEST_ASSERT_EQUAL_UINT32(cpu->out_reg[t0], 0x0);
+
+	// ADDU $t0, $t0, $t1 (0x0 + 0x1000)
+	cpu->registers[t0] = 0x0;
+	cpu->registers[t1] = 0x1000;
+	cpu->this_instruction = 0x01094021;
+	instruction_Addu(cpu);
+	TEST_ASSERT_EQUAL_UINT32(cpu->out_reg[t0], 0x1000);
+
+	// ADDU $t0, $t0, $t1 (0x1000 + 0x0)
+	cpu->registers[t0] = 0x1000;
+	cpu->registers[t1] = 0x0;
+	cpu->this_instruction = 0x01094021;
+	instruction_Addu(cpu);
+	TEST_ASSERT_EQUAL_UINT32(cpu->out_reg[t0], 0x1000);
+
+	// ADDU $t0, $t0, $t1 (0x1000 + 0x1000)
+	cpu->registers[t0] = 0x1000;
+	cpu->registers[t1] = 0x1000;
+	cpu->this_instruction = 0x01094021;
+	instruction_Addu(cpu);
+	TEST_ASSERT_EQUAL_UINT32(cpu->out_reg[t0], 0x2000);
+
+	// ADDU $t0, $t0, $t1 (0xFFFF + 0x0)
+	cpu->registers[t0] = 0xFFFF;
+	cpu->registers[t1] = 0x0;
+	cpu->this_instruction = 0x01094021;
+	instruction_Addu(cpu);
+	TEST_ASSERT_EQUAL_UINT32(cpu->out_reg[t0], 0xFFFF);
+
+	// ADDU $t0, $t0, $t1 (0xFFFFFFFF + 0x0)
+	cpu->registers[t0] = 0xFFFFFFFF;
+	cpu->registers[t1] = 0x0;
+	cpu->this_instruction = 0x01094021;
+	instruction_Addu(cpu);
+	TEST_ASSERT_EQUAL_UINT32(cpu->out_reg[t0], 0xFFFFFFFF);
+
+	// ADDU $t0, $t0, $t1 (0xFFFFFFFF + 0x1)
+	// Overflow
+	cpu->registers[t0] = 0xFFFFFFFF;
+	cpu->registers[t1] = 0x1;
+	cpu->this_instruction = 0x01094021;
+	instruction_Addu(cpu);
+	TEST_ASSERT_EQUAL_UINT32(cpu->out_reg[t0], 0);
+}
+
+void test_function_ins_and(void) {
+	// AND $t0, $t0, $t1 (0x0 & 0x0)
+	cpu->registers[t0] = 0x0;
+	cpu->registers[t1] = 0x0;
+	cpu->this_instruction = 0x01094024;
+	instruction_And(cpu);
+	TEST_ASSERT_EQUAL_UINT32(cpu->out_reg[t0], 0);
+
+	// AND $t0, $t0, $t1 (0x0 & 0x20)
+	cpu->registers[t0] = 0x0;
+	cpu->registers[t1] = 0x20;
+	cpu->this_instruction = 0x01094024;
+	instruction_And(cpu);
+	TEST_ASSERT_EQUAL_UINT32(cpu->out_reg[t0], 0x0 & 0x20);
+
+	// AND $t0, $t0, $t1 (0x20 & 0x20)
+	cpu->registers[t0] = 0x20;
+	cpu->registers[t1] = 0x20;
+	cpu->this_instruction = 0x01094024;
+	instruction_And(cpu);
+	TEST_ASSERT_EQUAL_UINT32(cpu->out_reg[t0], 0x20 & 0x20);
+
+	// AND $t0, $t0, $t1 (0xFFFF & 0x8000)
+	cpu->registers[t0] = 0xFFFF;
+	cpu->registers[t1] = 0x8000;
+	cpu->this_instruction = 0x01094024;
+	instruction_And(cpu);
+	TEST_ASSERT_EQUAL_UINT32(cpu->out_reg[t0], 0xFFFF & 0x8000);
+
+	// AND $t0, $t0, $t1 (0xFFFF & 0xFFFF)
+	cpu->registers[t0] = 0xFFFF;
+	cpu->registers[t1] = 0xFFFF;
+	cpu->this_instruction = 0x01094024;
+	instruction_And(cpu);
+	TEST_ASSERT_EQUAL_UINT32(cpu->out_reg[t0], 0xFFFF & 0xFFFF);
+}
+
+void test_function_ins_or(void) {
+	// OR $t0, $t0, $t1 (0x0 & 0x0)
+	cpu->registers[t0] = 0x0;
+	cpu->registers[t1] = 0x0;
+	cpu->this_instruction = 0x01094025;
+	instruction_Or(cpu);
+	TEST_ASSERT_EQUAL_UINT32(cpu->out_reg[t0], 0x0 | 0x0);
+
+	// OR $t0, $t0, $t1 (0x20 & 0x0)
+	cpu->registers[t0] = 0x20;
+	cpu->registers[t1] = 0x0;
+	cpu->this_instruction = 0x01094025;
+	instruction_Or(cpu);
+	TEST_ASSERT_EQUAL_UINT32(cpu->out_reg[t0], 0x20 | 0x0);
+
+	// OR $t0, $t0, $t1 (0x8000 & 0x2000)
+	cpu->registers[t0] = 0x8000;
+	cpu->registers[t1] = 0x2000;
+	cpu->this_instruction = 0x01094025;
+	instruction_Or(cpu);
+	TEST_ASSERT_EQUAL_UINT32(cpu->out_reg[t0], 0x8000 | 0x2000);
+
+	// OR $t0, $t0, $t1 (0xFFFF & 0xFFFF)
+	cpu->registers[t0] = 0xFFFF;
+	cpu->registers[t1] = 0xFFFF;
+	cpu->this_instruction = 0x01094025;
+	instruction_Or(cpu);
+	TEST_ASSERT_EQUAL_UINT32(cpu->out_reg[t0], 0xFFFF | 0xFFFF);
 }
 
 //
@@ -228,9 +360,62 @@ void test_function_ins_sll(void) {
 	TEST_ASSERT_EQUAL_UINT32(cpu->out_reg[t0], 0xFFFFFFFF << 0x10);
 }
 
+void test_function_ins_lb(void) {
+	// LB $t0, 0x0($t1)
+	cpu->registers[t1] = 0x0;
+	cpu->devices->ram->data[0x0] = 0x0;
+	cpu->this_instruction = 0x81280000;
+	instruction_Lb(cpu);
+	TEST_ASSERT_EQUAL_UINT8(cpu->load[0], t0);
+	TEST_ASSERT_EQUAL_UINT32(cpu->load[1], 0x0);
+
+	// LB $t0, 0x0($t1) (Mem 0x0 = 0x10)
+	cpu->registers[t1] = 0x0;
+	cpu->devices->ram->data[0x0] = 0x10;
+	cpu->this_instruction = 0x81280000;
+	instruction_Lb(cpu);
+	TEST_ASSERT_EQUAL_UINT8(cpu->load[0], t0);
+	TEST_ASSERT_EQUAL_UINT32(cpu->load[1], 0x10);
+
+	// LB $t0, 0x0($t1) (Mem 0x0 = 0xff)
+	cpu->registers[t1] = 0x0;
+	cpu->devices->ram->data[0x0] = 0xff;
+	cpu->this_instruction = 0x81280000;
+	instruction_Lb(cpu);
+	TEST_ASSERT_EQUAL_UINT8(cpu->load[0], t0);
+	TEST_ASSERT_EQUAL_UINT32(cpu->load[1], (uint32_t)((int8_t)0xff));
+}
+
 int tests_Run() {
 	UNITY_BEGIN();
 	RUN_TEST(test_function_bios_address);
+	// Logic
+	// MTHIMFHI
+	// MTLOMFLO
+	// MTHIMFLO
+	// MTLOMFHI
+	// ADD
+	RUN_TEST(test_function_ins_addu);
+	// SUB
+	// SUBU
+	RUN_TEST(test_function_ins_and);
+	RUN_TEST(test_function_ins_or);
+	// XOR
+	// NOR
+	// SLLV
+	// SRLV
+	// SRAV
+	// SLT
+	// SLTU
+	// DIV Q
+	// DIV R
+	// DIVU Q
+	// DIVU R
+	// MULT L
+	// MULT H
+	// MULTU L
+	// MULTU H
+
 	// Logic Immediate
 	RUN_TEST(test_function_ins_lui);
 	RUN_TEST(test_function_ins_addi);
@@ -243,5 +428,19 @@ int tests_Run() {
 	// sra
 	// slti
 	// sltiu
+
+	// Memory
+	RUN_TEST(test_function_ins_lb);
+	// LBU
+	// LH
+	// LHU
+	// LW
+	// LWL
+	// LWR
+	// SB
+	// SH
+	// SW
+	// SWL
+	// SWR
 	return UNITY_END();
 }

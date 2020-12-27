@@ -103,6 +103,7 @@ uint8_t load_Byte(CPU *cpu, uint32_t offset) {
 		// RAM
 		case RAM_OFFSET ... RAM_OFFSET + RAM_SIZE:
 			value = ram_LoadByte(cpu->devices->ram, new_offset);
+			log_Debug("Read byte 0x%X from 0x%X (RAM)", value, new_offset);
 			break;
 
 		default:
@@ -499,7 +500,8 @@ void instruction_Lb(CPU *cpu) {
 	uint32_t i = getISE(cpu->this_instruction);
 	uint32_t t = getT(cpu->this_instruction);
 	uint32_t s = getS(cpu->this_instruction);
-	int8_t v = (int8_t)load_Byte(cpu, cpu_GetRegister(cpu, s) + i);
+	uint32_t addr = cpu_GetRegister(cpu, s) + i;
+	int8_t v = (int8_t)load_Byte(cpu, addr);
 
 	cpu_SetLoadRegisters(cpu, t, (uint32_t)v);
 
@@ -523,7 +525,7 @@ void instruction_And(CPU *cpu) {
 	uint32_t s = getS(cpu->this_instruction);
 	uint32_t t = getT(cpu->this_instruction);
 	uint32_t v = cpu_GetRegister(cpu, s) & cpu_GetRegister(cpu, t);
-	
+
 	cpu_SetRegister(cpu, d, v);
 
 	log_Debug("0x%X: and %s, %s, %s", cpu->this_instruction, debugRegisterStrings[d], debugRegisterStrings[s], debugRegisterStrings[t]);
