@@ -70,51 +70,51 @@ void cpu_ExecuteInstruction(CPU *cpu) {
 		case SPECIAL:
 			instruction_Special(cpu);
 			break;
-		case LUI:
-			instruction_Lui(cpu);
-			break;
-		case ORI:
-			instruction_Ori(cpu);
-			break;
-		case SW:
-			instruction_SW(cpu);
-			break;
-		case ADDI:
-			instruction_Addi(cpu);
-			break;
-		case ADDIU:
-			instruction_Addiu(cpu);
-			break;
-		case J:
-			instruction_J(cpu);
-			break;
-		case COP0:
-			cop0_Handle(cpu);
-			break;
-		case BNE:
-			instruction_Bne(cpu);
-			break;
-		case LW:
-			instruction_Lw(cpu);
-			break;
-		case SH:
-			instruction_Sh(cpu);
-			break;
-		case JAL:
-			instruction_Jal(cpu);
-			break;
-		case ANDI:
-			instruction_Andi(cpu);
-			break;
-		case SB:
-			instruction_Sb(cpu);
-			break;
-		case LB:
-			instruction_Lb(cpu);
-			break;
-		case BEQ:
-			instruction_Beq(cpu);
-			break;
+		// case LUI:
+		// 	instruction_Lui(cpu);
+		// 	break;
+		// case ORI:
+		// 	instruction_Ori(cpu);
+		// 	break;
+		// case SW:
+		// 	instruction_SW(cpu);
+		// 	break;
+		// case ADDI:
+		// 	instruction_Addi(cpu);
+		// 	break;
+		// case ADDIU:
+		// 	instruction_Addiu(cpu);
+		// 	break;
+		// case J:
+		// 	instruction_J(cpu);
+		// 	break;
+		// case COP0:
+		// 	cop0_Handle(cpu);
+		// 	break;
+		// case BNE:
+		// 	instruction_Bne(cpu);
+		// 	break;
+		// case LW:
+		// 	instruction_Lw(cpu);
+		// 	break;
+		// case SH:
+		// 	instruction_Sh(cpu);
+		// 	break;
+		// case JAL:
+		// 	instruction_Jal(cpu);
+		// 	break;
+		// case ANDI:
+		// 	instruction_Andi(cpu);
+		// 	break;
+		// case SB:
+		// 	instruction_Sb(cpu);
+		// 	break;
+		// case LB:
+		// 	instruction_Lb(cpu);
+		// 	break;
+		// case BEQ:
+		// 	instruction_Beq(cpu);
+		// 	break;
 		default:
 			log_Error("Unhandled Encoded Instruction 0x%08X", cpu->this_instruction);
 			cpu_DumpRegisters(cpu);

@@ -1,8 +1,10 @@
 #include <stdlib.h>
+#include <stdint.h>
 #include "utils/unity/unity.h"
 #include "tests.h"
 #include "cpu/cpu.h"
 #include "cpu/instructions.h"
+#include "utils/logger.h"
 
 static CPU *cpu = NULL;
 
@@ -15,98 +17,120 @@ void tearDown() {
 }
 
 void test_function_bios_address(void) {
-	TEST_ASSERT_EQUAL(cpu->PC, BIOS_OFFSET);
+	TEST_ASSERT_EQUAL_UINT32(cpu->PC, BIOS_OFFSET);
 }
 
+//
+// Logic Immediate
+//
+
 void test_function_ins_lui(void) {
-	// lui $t0, 0x13
-	cpu->this_instruction = 0x3C080013;
+	// LUI $t0, 0x0
+	cpu->this_instruction = 0x3C080000;
 	instruction_Lui(cpu);
-	TEST_ASSERT_EQUAL(cpu->out_reg[t0], 0x130000);
+	TEST_ASSERT_EQUAL_UINT32(cpu->out_reg[t0], 0x0 << 16);
+
+	// LUI $t0, 0x32
+	cpu->this_instruction = 0x3C080032;
+	instruction_Lui(cpu);
+	TEST_ASSERT_EQUAL_UINT32(cpu->out_reg[t0], 0x32 << 16);
+
+	// LUI $t0, 0xFFFF
+	cpu->this_instruction = 0x3C08FFFF;
+	instruction_Lui(cpu);
+	TEST_ASSERT_EQUAL_UINT32(cpu->out_reg[t0], 0xFFFF << 16);
 }
 
 void test_function_ins_ori(void) {
-	// ori $t0, $t0, 0x243F
-	cpu->this_instruction = 0x3508243F;
+	// ORI $t0, $t0, 0x0
+	cpu->this_instruction = 0x35080000;
 	instruction_Ori(cpu);
-	TEST_ASSERT_EQUAL(cpu->out_reg[t0], 0x243f);
+	TEST_ASSERT_EQUAL_UINT32(cpu->out_reg[t0], 0 | 0);
 
-	// Copy out register to register
-	cpu_CopyRegister(cpu);
-
-	// ori $t1, $t0, 0x1234
-	cpu->this_instruction = 0x35091234;
+	// ORI $t0, $t0, 0x0 (0x100 at $t0)
+	cpu->registers[t0] = 0x100;
+	cpu->this_instruction = 0x35080000;
 	instruction_Ori(cpu);
-	TEST_ASSERT_EQUAL(cpu->out_reg[t1], 0x363f);
-}
+	TEST_ASSERT_EQUAL_UINT32(cpu->out_reg[t0], 0x100 | 0);
 
-void test_function_ins_sw(void) {
-	// sw $t0, 0x1010, $t1
-	// todo
-	cpu->this_instruction = 0xAD281010;
-	instruction_SW(cpu);
-	TEST_ASSERT_EQUAL(cpu->out_reg[t1], 0x130000);
+	// ORI $t0, $t0, 0x100
+	cpu->this_instruction = 0x35080100;
+	instruction_Ori(cpu);
+	TEST_ASSERT_EQUAL_UINT32(cpu->out_reg[t0], 0x0 | 0x100);
+
+	// ORI $t0, $t0, 0x100 (0x100 at $t0)
+	cpu->registers[t0] = 0x100;
+	cpu->this_instruction = 0x35080100;
+	instruction_Ori(cpu);
+	TEST_ASSERT_EQUAL_UINT32(cpu->out_reg[t0], 0x100 | 0x100);
+
+	// ORI $t0, $t0, 0xFFFF
+	cpu->this_instruction = 0x3508FFFF;
+	instruction_Ori(cpu);
+	TEST_ASSERT_EQUAL_UINT32(cpu->out_reg[t0], 0x0 | 0xFFFF);
+
+	// ORI $t0, $t0, 0xFFFF (0x8000 at $t0)
+	cpu->registers[t0] = 0x8000;
+	cpu->this_instruction = 0x3508FFFF;
+	instruction_Ori(cpu);
+	TEST_ASSERT_EQUAL_UINT32(cpu->out_reg[t0], 0x8000 | 0xFFFF);
 }
 
 void test_function_ins_sll(void) {
-	// sll $zero, $zero, 0x0
+	// SLL $zero, $zero, 0x0
 	cpu->this_instruction = 0x00000000;
 	instruction_Sll(cpu);
-	TEST_ASSERT_EQUAL(cpu->out_reg[zero], 0x0);
+	TEST_ASSERT_EQUAL_UINT32(cpu->out_reg[zero], 0);
 
-	// sll $t0, $t1, 0x1
-	cpu->this_instruction = 0x00094040;
+	// SLL $t0, $zero, 0x0
+	cpu->this_instruction = 0x00004000;
 	instruction_Sll(cpu);
-	TEST_ASSERT_EQUAL(cpu->out_reg[t1], 0x0);
-}
+	TEST_ASSERT_EQUAL_UINT32(cpu->out_reg[t0], 0);
 
-void test_function_ins_addiu(void) {
-	// addiu $t0, $t1, 0xB88
-	cpu->this_instruction = 0x25280B88;
-	instruction_Addiu(cpu);
-	TEST_ASSERT_EQUAL(cpu->out_reg[t0], 0xb88);
-}
+	// SLL $t0, $t0, 0x0
+	cpu->this_instruction = 0x00084000;
+	instruction_Sll(cpu);
+	TEST_ASSERT_EQUAL_UINT32(cpu->out_reg[t0], 0);
 
-void test_function_ins_j(void) {
-	// addiu $t0, $t1, 0xB88
-	// todo
-	cpu->this_instruction = 0xBF00054;
-	instruction_J(cpu);
-	TEST_ASSERT_EQUAL(cpu->out_reg[t0], 0xb88);
-}
+	// SLL $t0, $t0, 0x0 (0x100 at $t0)
+	cpu->registers[t0] = 0x100;
+	cpu->this_instruction = 0x00084000;
+	instruction_Sll(cpu);
+	TEST_ASSERT_EQUAL_UINT32(cpu->out_reg[t0], 0x100 << 0);
 
-void test_function_ins_or(void) {
-	// or $t0, $t1, $t2
-	cpu->this_instruction = 0x012A4025;
-	cpu->registers[t1] = 0x2;
-	cpu->registers[t2] = 0x8;
-	instruction_Or(cpu);
-	TEST_ASSERT_EQUAL(cpu->out_reg[t0], 0x2 | 0x8);
-}
+	// SLL $t0, $t0, 0x10 (0x100 at $t0)
+	cpu->registers[t0] = 0x100;
+	cpu->this_instruction = 0x00084400;
+	instruction_Sll(cpu);
+	TEST_ASSERT_EQUAL_UINT32(cpu->out_reg[t0], 0x100 << 0x10);
 
-void test_function_ins_bne(void) {
-	// bne $t0, $t1, 0xfff7
-	// branch equal 0x0 == 0x0, no PC move
-	cpu->this_instruction = 0x1509FFF7;
-	instruction_Bne(cpu);
-	TEST_ASSERT_EQUAL(cpu->PC, BIOS_OFFSET);
+	// SLL $t0, $t0, 0x0 (0xFFFFFFFF at $t0)
+	cpu->registers[t0] = 0xFFFFFFFF;
+	cpu->this_instruction = 0x00084000;
+	instruction_Sll(cpu);
+	TEST_ASSERT_EQUAL_UINT32(cpu->out_reg[t0], 0xFFFFFFFF << 0);
 
-	// again except branch not equal, PC move
-	cpu->registers[t1] = 0x1;
-	instruction_Bne(cpu);
-	TEST_ASSERT_EQUAL(cpu->PC, BIOS_OFFSET + (0xfffffff7 << 2) - 4);
+	// SLL $t0, $t0, 0x10 (0xFFFFFFFF at $t0)
+	cpu->registers[t0] = 0xFFFFFFFF;
+	cpu->this_instruction = 0x00084400;
+	instruction_Sll(cpu);
+	TEST_ASSERT_EQUAL_UINT32(cpu->out_reg[t0], 0xFFFFFFFF << 0x10);
 }
 
 int tests_Run() {
 	UNITY_BEGIN();
 	RUN_TEST(test_function_bios_address);
+	// Logic Immediate
 	RUN_TEST(test_function_ins_lui);
+	// addi
+	// addiu
+	// andi
 	RUN_TEST(test_function_ins_ori);
-	// RUN_TEST(test_function_ins_sw);
+	// xori
 	RUN_TEST(test_function_ins_sll);
-	RUN_TEST(test_function_ins_addiu);
-	// RUN_TEST(test_function_ins_j);
-	RUN_TEST(test_function_ins_or);
-	RUN_TEST(test_function_ins_bne);
+	// srl
+	// sra
+	// slti
+	// sltiu
 	return UNITY_END();
 }

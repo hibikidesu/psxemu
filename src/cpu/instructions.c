@@ -293,9 +293,10 @@ void branch(CPU *cpu, uint32_t offset) {
 void instruction_Lui(CPU *cpu) {
 	uint32_t i = getI(cpu->this_instruction);
 	uint32_t t = getT(cpu->this_instruction);
-	
-	cpu_SetRegister(cpu, t, i << 16);
-	log_Debug("0x%X: lui %s, 0x%X", cpu->this_instruction, debugRegisterStrings[t], i);
+	uint32_t v = i << 16;
+
+	cpu_SetRegister(cpu, t, v);
+	log_Debug("0x%X: lui %s, 0x%04X", cpu->this_instruction, debugRegisterStrings[t], i);
 }
 
 void instruction_Ori(CPU *cpu) {
@@ -305,7 +306,7 @@ void instruction_Ori(CPU *cpu) {
 	uint32_t v = cpu_GetRegister(cpu, s) | i;
 
 	cpu_SetRegister(cpu, t, v);
-	log_Debug("0x%X: ori %s, %s, 0x%X", cpu->this_instruction, debugRegisterStrings[t], debugRegisterStrings[s], i);
+	log_Debug("0x%X: ori %s, %s, 0x%04X", cpu->this_instruction, debugRegisterStrings[t], debugRegisterStrings[s], i);
 }
 
 void instruction_SW(CPU *cpu) {
