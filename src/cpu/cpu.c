@@ -62,59 +62,59 @@ void cpu_SetLoadRegisters(CPU *cpu, uint32_t index, uint32_t value) {
 }
 
 void cpu_ExecuteInstruction(CPU *cpu) {
-	// log_Debug("Current Instruction: 0x%08X, Next Instruction: 0x%08X, PC: 0x%08X, SR: 0x%08X", 
-	// 	cpu->this_instruction, cpu->next_instruction, cpu->PC, cpu->SR);
+	log_Debug("Current Instruction: 0x%08X, Next Instruction: 0x%08X, PC: 0x%08X, SR: 0x%08X", 
+		cpu->this_instruction, cpu->next_instruction, cpu->PC, cpu->SR);
 	// Decode instruction bits [31:26]
 	switch (cpu->this_instruction >> 26) {
 		// SPECIAL
 		case SPECIAL:
 			instruction_Special(cpu);
 			break;
-		// case LUI:
-		// 	instruction_Lui(cpu);
-		// 	break;
-		// case ORI:
-		// 	instruction_Ori(cpu);
-		// 	break;
-		// case SW:
-		// 	instruction_SW(cpu);
-		// 	break;
-		// case ADDI:
-		// 	instruction_Addi(cpu);
-		// 	break;
-		// case ADDIU:
-		// 	instruction_Addiu(cpu);
-		// 	break;
-		// case J:
-		// 	instruction_J(cpu);
-		// 	break;
-		// case COP0:
-		// 	cop0_Handle(cpu);
-		// 	break;
-		// case BNE:
-		// 	instruction_Bne(cpu);
-		// 	break;
-		// case LW:
-		// 	instruction_Lw(cpu);
-		// 	break;
-		// case SH:
-		// 	instruction_Sh(cpu);
-		// 	break;
-		// case JAL:
-		// 	instruction_Jal(cpu);
-		// 	break;
-		// case ANDI:
-		// 	instruction_Andi(cpu);
-		// 	break;
-		// case SB:
-		// 	instruction_Sb(cpu);
-		// 	break;
-		// case LB:
-		// 	instruction_Lb(cpu);
-		// 	break;
-		// case BEQ:
-		// 	instruction_Beq(cpu);
-		// 	break;
+		case LUI:
+			instruction_Lui(cpu);
+			break;
+		case ORI:
+			instruction_Ori(cpu);
+			break;
+		case SW:
+			instruction_SW(cpu);
+			break;
+		case ADDIU:
+			instruction_Addiu(cpu);
+			break;
+		case J:
+			instruction_J(cpu);
+			break;
+		case COP0:
+			cop0_Handle(cpu);
+			break;
+		case BNE:
+			instruction_Bne(cpu);
+			break;
+		case ADDI:
+			instruction_Addi(cpu);
+			break;
+		case LW:
+			instruction_Lw(cpu);
+			break;
+		case SH:
+			instruction_Sh(cpu);
+			break;
+		case JAL:
+			instruction_Jal(cpu);
+			break;
+		case ANDI:
+			instruction_Andi(cpu);
+			break;
+		case SB:
+			instruction_Sb(cpu);
+			break;
+		case LB:
+			instruction_Lb(cpu);
+			break;
+		case BEQ:
+			instruction_Beq(cpu);
+			break;
 		default:
 			log_Error("Unhandled Encoded Instruction 0x%08X", cpu->this_instruction);
 			cpu_DumpRegisters(cpu);
@@ -129,10 +129,6 @@ void cpu_CopyRegister(CPU *cpu) {
 }
 
 void cpu_NextInstruction(CPU *cpu) {
-	// Handle loading registers
-	cpu_SetRegister(cpu, cpu->load[0], cpu->load[1]);
-	cpu_SetLoadRegisters(cpu, 0, 0);
-
 	// Set this instruction
 	cpu->this_instruction = cpu->next_instruction;
 
@@ -141,6 +137,10 @@ void cpu_NextInstruction(CPU *cpu) {
 
 	// Incr to where the next instruction is
 	cpu->PC += 4;
+
+	// Handle loading registers
+	cpu_SetRegister(cpu, cpu->load[0], cpu->load[1]);
+	cpu_SetLoadRegisters(cpu, 0, 0);
 
 	// Execute instruction
 	cpu_ExecuteInstruction(cpu);

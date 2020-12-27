@@ -62,9 +62,13 @@ void ram_StoreInt(RAM *ram, uint32_t address, uint32_t value) {
 	exit(1);
 }
 
+void ram_Reset(RAM *ram) {
+	memset(ram->data, 0, sizeof(ram->data));
+}
+
 RAM *ram_Create() {
 	RAM *ram = malloc(sizeof(RAM));
-	memset(ram->data, 0x0, sizeof(ram->data));
+	ram_Reset(ram);
 	return ram;
 }
 

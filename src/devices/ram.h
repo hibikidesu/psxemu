@@ -16,6 +16,7 @@ uint8_t ram_LoadByte(RAM *ram, uint32_t address);
 uint32_t ram_LoadInt(RAM *ram, uint32_t address);
 void ram_StoreByte(RAM *ram, uint32_t address, uint8_t value);
 void ram_StoreInt(RAM *ram, uint32_t offset, uint32_t value);
+void ram_Reset(RAM *ram);
 RAM *ram_Create();
 void ram_Destroy(RAM *ram);
 

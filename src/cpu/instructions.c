@@ -319,12 +319,13 @@ void instruction_SW(CPU *cpu) {
 	uint32_t i = getISE(cpu->this_instruction);
 	uint32_t t = getT(cpu->this_instruction);
 	uint32_t s = getS(cpu->this_instruction);
-	uint32_t v = cpu_GetRegister(cpu, t) + i;
-	uint32_t addr = cpu_GetRegister(cpu, s);
 
-	log_Debug("0x%X: sw %s, 0x%X, %s", cpu->this_instruction, debugRegisterStrings[t], i, debugRegisterStrings[s]);
+	uint32_t addr = cpu_GetRegister(cpu, s) + i;
+	uint32_t v = cpu_GetRegister(cpu, t);
 
 	store_Int(cpu, addr, v);
+
+	log_Debug("0x%X: sw %s, 0x%X, %s", cpu->this_instruction, debugRegisterStrings[t], i, debugRegisterStrings[s]);
 }
 
 void instruction_Sll(CPU *cpu) {
@@ -386,8 +387,14 @@ void instruction_Addi(CPU *cpu) {
 	uint32_t t = getT(cpu->this_instruction);
 	uint32_t s = getS(cpu->this_instruction);
 	int32_t new_s = (int32_t)cpu_GetRegister(cpu, s);
-	uint32_t v = new_s + i;
 
+	// Check for overflow
+	if ((new_s >= 0) && (i > (INT32_MAX - new_s))) {
+		log_Error("ADDI OVERFLOW");
+		exit(1);
+	}
+
+	uint32_t v = new_s + i;
 	cpu_SetRegister(cpu, t, v);
 
 	log_Debug("0x%X: addi %s, %s, 0x%X", cpu->this_instruction, debugRegisterStrings[t], debugRegisterStrings[s], i);
@@ -439,7 +446,7 @@ void instruction_Sh(CPU *cpu) {
 	uint32_t s = getS(cpu->this_instruction);
 	uint32_t addr = cpu_GetRegister(cpu, s) + i;
 
-	store_Short(cpu, addr, cpu_GetRegister(cpu, t));
+	store_Short(cpu, addr, (uint16_t)cpu_GetRegister(cpu, t));
 	
 	log_Debug("0x%X: sh %s, 0x%X, %s", cpu->this_instruction, debugRegisterStrings[t], i, debugRegisterStrings[s]);
 }
@@ -473,17 +480,18 @@ void instruction_Sb(CPU *cpu) {
 	uint32_t i = getISE(cpu->this_instruction);
 	uint32_t t = getT(cpu->this_instruction);
 	uint32_t s = getS(cpu->this_instruction);
+	uint32_t addr = cpu_GetRegister(cpu, s) + i;
 	
-	store_Byte(cpu, cpu_GetRegister(cpu, s) + i, cpu_GetRegister(cpu, t));
+	store_Byte(cpu, addr, (uint8_t)cpu_GetRegister(cpu, t));
 
 	log_Debug("0x%X: sb %s, 0x%X, %s", cpu->this_instruction, debugRegisterStrings[t], i, debugRegisterStrings[s]);
 }
 
 void instruction_Jr(CPU *cpu) {
 	uint32_t s = getS(cpu->this_instruction);
+	uint32_t old_pc = cpu->PC;
 	cpu->PC = cpu_GetRegister(cpu, s);
-	log_Debug("SET PC: %s = 0x%X", debugRegisterStrings[s], cpu->PC);
-
+	log_Debug("SET PC: %s = 0x%X FROM 0x%X WITH %s", debugRegisterStrings[s], cpu->PC, old_pc, debugRegisterStrings[s]);
 	log_Debug("0x%X: jr %s", cpu->this_instruction, debugRegisterStrings[s]);
 }
 
@@ -493,7 +501,7 @@ void instruction_Lb(CPU *cpu) {
 	uint32_t s = getS(cpu->this_instruction);
 	int8_t v = (int8_t)load_Byte(cpu, cpu_GetRegister(cpu, s) + i);
 
-	cpu_SetLoadRegisters(cpu, t, v);
+	cpu_SetLoadRegisters(cpu, t, (uint32_t)v);
 
 	log_Debug("0x%X: lb %s, 0x%X, %s", cpu->this_instruction, debugRegisterStrings[t], i, debugRegisterStrings[s]);
 }
@@ -504,7 +512,7 @@ void instruction_Beq(CPU *cpu) {
 	uint32_t t = getT(cpu->this_instruction);
 
 	if (cpu_GetRegister(cpu, s) == cpu_GetRegister(cpu, t)) {
-		cpu->PC = (cpu->PC + (i << 2)) - 4;
+		branch(cpu, i);
 	}
 
 	log_Debug("0x%X: beq %s, %s, 0x%X", cpu->this_instruction, debugRegisterStrings[s], debugRegisterStrings[t], i);
