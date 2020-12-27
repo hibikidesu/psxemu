@@ -726,6 +726,18 @@ void instruction_Syscall(CPU *cpu) {
 	cpu_Exception(cpu, EXCEPTION_SYSCALL);
 }
 
+void instruction_Mtlo(CPU *cpu) {
+	// Move To LO
+	uint32_t s = getS(cpu->this_instruction);
+	cpu->LO = cpu_GetRegister(cpu, s);
+}
+
+void instruction_Mthi(CPU *cpu) {
+	// Move To HI
+	uint32_t s = getS(cpu->this_instruction);
+	cpu->HI = cpu_GetRegister(cpu, s);
+}
+
 //
 // SPECIAL HANDLERS
 //
@@ -782,6 +794,12 @@ void instruction_Special(CPU *cpu) {
 			break;
 		case SYSCALL:
 			instruction_Syscall(cpu);
+			break;
+		case MTLO:
+			instruction_Mtlo(cpu);
+			break;
+		case MTHI:
+			instruction_Mthi(cpu);
 			break;
 		default:
 			log_Error("Unhandled SPECIAL Encoded Instruction 0x%08X, Subfunc 0x%X", 

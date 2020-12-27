@@ -118,8 +118,8 @@
 #define SW    0b101011
 #define MFHI  0b010000
 #define MFLO  0b010010
-// #define MTHI  0b010001
-// #define MTLO  0b010011
+#define MTHI  0b010001
+#define MTLO  0b010011
 // #define TRAP  0b011010
 #define SYSCALL 0b001100
 #define COP0  0b010000
@@ -173,7 +173,8 @@ void instruction_Divu(CPU *cpu);
 void instruction_Mfhi(CPU *cpu);
 void instruction_Slt(CPU *cpu);
 void instruction_Syscall(CPU *cpu);
-void instruction_Syscall(CPU *cpu);
+void instruction_Mtlo(CPU *cpu);
+void instruction_Mthi(CPU *cpu);
 
 // Special handlers
 void instruction_Special(CPU *cpu);
