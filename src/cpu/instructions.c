@@ -382,7 +382,7 @@ void instruction_Bne(CPU *cpu) {
 }
 
 void instruction_Addi(CPU *cpu) {
-	uint32_t i = getISE(cpu->this_instruction);
+	int32_t i = getISE(cpu->this_instruction);
 	uint32_t t = getT(cpu->this_instruction);
 	uint32_t s = getS(cpu->this_instruction);
 	int32_t new_s = (int32_t)cpu_GetRegister(cpu, s);

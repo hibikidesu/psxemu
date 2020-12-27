@@ -41,8 +41,117 @@ void test_function_ins_lui(void) {
 	TEST_ASSERT_EQUAL_UINT32(cpu->out_reg[t0], 0xFFFF << 16);
 }
 
+void test_function_ins_addi(void) {
+	// ADDI $t0, $t0, 0x0
+	cpu->registers[t0] = 0x0;
+	cpu->this_instruction = 0x21080000;
+	instruction_Addi(cpu);
+	TEST_ASSERT_EQUAL_UINT32(cpu->out_reg[t0], 0);
+
+	// ADDI $t0, $t0, 0x0 (0x100 at $t0)
+	cpu->registers[t0] = 0x100;
+	cpu->this_instruction = 0x21080000;
+	instruction_Addi(cpu);
+	TEST_ASSERT_EQUAL_UINT32(cpu->out_reg[t0], 0x100);
+	
+	// ADDI $t0, $t0, 0x100
+	cpu->registers[t0] = 0x0;
+	cpu->this_instruction = 0x21080100;
+	instruction_Addi(cpu);
+	TEST_ASSERT_EQUAL_UINT32(cpu->out_reg[t0], 0x100);
+
+	// ADDI $t0, $t0, 0x100 (0x100 at $t0)
+	cpu->registers[t0] = 0x100;
+	cpu->this_instruction = 0x21080100;
+	instruction_Addi(cpu);
+	TEST_ASSERT_EQUAL_UINT32(cpu->out_reg[t0], 0x200);
+
+	// ADDI $t0, $t0, 0x1000
+	cpu->registers[t0] = 0x0;
+	cpu->this_instruction = 0x21081000;
+	instruction_Addi(cpu);
+	TEST_ASSERT_EQUAL_UINT32(cpu->out_reg[t0], 0x1000);
+}
+
+void test_function_ins_addiu(void) {
+	// ADDIU $t0, $t0, 0x0
+	cpu->registers[t0] = 0x0;
+	cpu->this_instruction = 0x25080000;
+	instruction_Addiu(cpu);
+	TEST_ASSERT_EQUAL_UINT32(cpu->out_reg[t0], 0);
+
+	// ADDIU $t0, $t0, 0x0 (0x100 at $t0)
+	cpu->registers[t0] = 0x100;
+	cpu->this_instruction = 0x25080000;
+	instruction_Addiu(cpu);
+	TEST_ASSERT_EQUAL_UINT32(cpu->out_reg[t0], 0x100);
+	
+	// ADDIU $t0, $t0, 0x100
+	cpu->registers[t0] = 0x0;
+	cpu->this_instruction = 0x25080100;
+	instruction_Addiu(cpu);
+	TEST_ASSERT_EQUAL_UINT32(cpu->out_reg[t0], 0x100);
+
+	// ADDIU $t0, $t0, 0x100 (0x100 at $t0)
+	cpu->registers[t0] = 0x100;
+	cpu->this_instruction = 0x25080100;
+	instruction_Addiu(cpu);
+	TEST_ASSERT_EQUAL_UINT32(cpu->out_reg[t0], 0x200);
+
+	// ADDIU $t0, $t0, 0x1000
+	cpu->registers[t0] = 0x0;
+	cpu->this_instruction = 0x25081000;
+	instruction_Addiu(cpu);
+	TEST_ASSERT_EQUAL_UINT32(cpu->out_reg[t0], 0x1000);
+}
+
+void test_function_ins_andi(void) {
+	// ANDI $t0, $t0, 0x0
+	cpu->registers[t0] = 0x0;
+	cpu->this_instruction = 0x31080000;
+	instruction_Andi(cpu);
+	TEST_ASSERT_EQUAL_UINT32(cpu->out_reg[t0], 0x0 & 0x0);
+
+	// ANDI $t0, $t0, 0x0 (0x100 at $t0)
+	cpu->registers[t0] = 0x100;
+	cpu->this_instruction = 0x31080000;
+	instruction_Andi(cpu);
+	TEST_ASSERT_EQUAL_UINT32(cpu->out_reg[t0], 0x0 & 0x100);
+
+	// ANDI $t0, $t0, 0x100
+	cpu->registers[t0] = 0x0;
+	cpu->this_instruction = 0x31080100;
+	instruction_Andi(cpu);
+	TEST_ASSERT_EQUAL_UINT32(cpu->out_reg[t0], 0x0 & 0x100);
+
+	// ANDI $t0, $t0, 0x100 (0x100 at $t0)
+	cpu->registers[t0] = 0x100;
+	cpu->this_instruction = 0x31080100;
+	instruction_Andi(cpu);
+	TEST_ASSERT_EQUAL_UINT32(cpu->out_reg[t0], 0x100 & 0x100);
+
+	// ANDI $t0, $t0, 0x1000
+	cpu->registers[t0] = 0x0;
+	cpu->this_instruction = 0x31081000;
+	instruction_Andi(cpu);
+	TEST_ASSERT_EQUAL_UINT32(cpu->out_reg[t0], 0x0 & 0x1000);
+
+	// ANDI $t0, $t0, 0x1000 (0x1000 at $t0)
+	cpu->registers[t0] = 0x100;
+	cpu->this_instruction = 0x31081000;
+	instruction_Andi(cpu);
+	TEST_ASSERT_EQUAL_UINT32(cpu->out_reg[t0], 0x100 & 0x1000);
+
+	// ANDI $t0, $t0, 0xFFFF (0x1000 at $t0)
+	cpu->registers[t0] = 0x1000;
+	cpu->this_instruction = 0x3108FFFF;
+	instruction_Andi(cpu);
+	TEST_ASSERT_EQUAL_UINT32(cpu->out_reg[t0], 0x1000 & 0xFFFF);
+}
+
 void test_function_ins_ori(void) {
 	// ORI $t0, $t0, 0x0
+	cpu->registers[t0] = 0x0;
 	cpu->this_instruction = 0x35080000;
 	instruction_Ori(cpu);
 	TEST_ASSERT_EQUAL_UINT32(cpu->out_reg[t0], 0 | 0);
@@ -54,6 +163,7 @@ void test_function_ins_ori(void) {
 	TEST_ASSERT_EQUAL_UINT32(cpu->out_reg[t0], 0x100 | 0);
 
 	// ORI $t0, $t0, 0x100
+	cpu->registers[t0] = 0x0;
 	cpu->this_instruction = 0x35080100;
 	instruction_Ori(cpu);
 	TEST_ASSERT_EQUAL_UINT32(cpu->out_reg[t0], 0x0 | 0x100);
@@ -65,6 +175,7 @@ void test_function_ins_ori(void) {
 	TEST_ASSERT_EQUAL_UINT32(cpu->out_reg[t0], 0x100 | 0x100);
 
 	// ORI $t0, $t0, 0xFFFF
+	cpu->registers[t0] = 0x0;
 	cpu->this_instruction = 0x3508FFFF;
 	instruction_Ori(cpu);
 	TEST_ASSERT_EQUAL_UINT32(cpu->out_reg[t0], 0x0 | 0xFFFF);
@@ -122,9 +233,9 @@ int tests_Run() {
 	RUN_TEST(test_function_bios_address);
 	// Logic Immediate
 	RUN_TEST(test_function_ins_lui);
-	// addi
-	// addiu
-	// andi
+	RUN_TEST(test_function_ins_addi);
+	RUN_TEST(test_function_ins_addiu);
+	RUN_TEST(test_function_ins_andi);
 	RUN_TEST(test_function_ins_ori);
 	// xori
 	RUN_TEST(test_function_ins_sll);
