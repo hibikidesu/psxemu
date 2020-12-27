@@ -155,11 +155,11 @@ void cpu_FetchInstruction(CPU *cpu) {
 			cpu->next_instruction = bios_LoadInt(cpu->devices->bios, offset);
 			break;
 		// RAM
-		case RAM_OFFSET ... RAM_OFFSET + RAM_BIOS_SIZE:
+		case RAM_OFFSET ... RAM_OFFSET + RAM_SIZE:
 			cpu->next_instruction = ram_LoadInt(cpu->devices->ram, offset);
 			break;
 		default:
-			log_Error("Unknown PC Region");
+			log_Error("Unknown PC Region 0x%X", offset);
 			exit(1);
 			break;
 	}
@@ -168,11 +168,6 @@ void cpu_FetchInstruction(CPU *cpu) {
 void cpu_NextInstruction(CPU *cpu) {
 	// Set this instruction
 	cpu->this_instruction = cpu->next_instruction;
-
-	// Dump
-	// if (cpu->PC == 0xA0000500) {
-	// 	ram_Dump(cpu->devices->ram, "ram.bin");
-	// }
 
 	// Get next instruction
 	cpu_FetchInstruction(cpu);
@@ -197,6 +192,7 @@ void cpu_AddDevices(CPU *cpu, DEVICES *devices) {
 void cpu_Reset(CPU *cpu) {
 	// Beginning of bios
 	cpu->PC = BIOS_OFFSET;
+	cpu->NEXT_PC = cpu->PC + 4;
 
 	// Set status register and HI, LO
 	cpu->SR = 0;

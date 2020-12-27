@@ -96,7 +96,7 @@
 // #define XORI  0b001110
 // #define LHI   0b011001
 // #define LLO   0b011000
-// #define SLT   0b101010
+#define SLT   0b101010
 #define SLTU  0b101011
 #define SLTI  0b001010
 #define SLTIU 0b001011
@@ -116,7 +116,7 @@
 #define SB    0b101000
 #define SH    0b101001
 #define SW    0b101011
-// #define MFHI  0b010000
+#define MFHI  0b010000
 #define MFLO  0b010010
 // #define MTHI  0b010001
 // #define MTLO  0b010011
@@ -169,6 +169,9 @@ void instruction_Div(CPU *cpu);
 void instruction_Mflo(CPU *cpu);
 void instruction_Srl(CPU *cpu);
 void instruction_Divu(CPU *cpu);
+void instruction_Mfhi(CPU *cpu);
+void instruction_Slt(CPU *cpu);
+void instruction_Syscall(CPU *cpu);
 
 // Special handlers
 void instruction_Special(CPU *cpu);

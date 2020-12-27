@@ -92,7 +92,7 @@ uint8_t load_Byte(CPU *cpu, uint32_t offset) {
 		// Load from bios
 		case BIOS_OFFSET ... BIOS_OFFSET + BIOS_SIZE:
 			value = bios_LoadByte(cpu->devices->bios, new_offset);
-			log_Debug("Read byte 0x%X from 0x%X (BIOS)", value, new_offset);
+			// log_Debug("Read byte 0x%X from 0x%X (BIOS)", value, new_offset);
 			break;
 
 		// Expansion 1
@@ -105,7 +105,7 @@ uint8_t load_Byte(CPU *cpu, uint32_t offset) {
 		// RAM
 		case RAM_OFFSET ... RAM_OFFSET + RAM_SIZE:
 			value = ram_LoadByte(cpu->devices->ram, new_offset);
-			log_Debug("Read byte 0x%X from 0x%X (RAM)", value, new_offset);
+			// log_Debug("Read byte 0x%X from 0x%X (RAM)", value, new_offset);
 			break;
 
 		default:
@@ -138,13 +138,13 @@ uint32_t load_Int(CPU *cpu, uint32_t offset) {
 		// Load from ram
 		case RAM_OFFSET ... RAM_OFFSET + RAM_SIZE:
 			value = ram_LoadInt(cpu->devices->ram, new_offset);
-			log_Debug("Read int 0x%X from 0x%X (RAM)", value, new_offset);
+			// log_Debug("Read int 0x%X from 0x%X (RAM)", value, new_offset);
 			break;
 
 		// BIOS
 		case BIOS_OFFSET ... BIOS_OFFSET + BIOS_SIZE:
 			value = bios_LoadInt(cpu->devices->bios, new_offset);
-			log_Debug("Read int 0x%X from 0x%X (BIOS)", value, new_offset);
+			// log_Debug("Read int 0x%X from 0x%X (BIOS)", value, new_offset);
 			break;
 
 		// Interrupt Control
@@ -177,7 +177,7 @@ void store_Byte(CPU *cpu, uint32_t offset, uint8_t value) {
 		// RAM
 		case RAM_OFFSET ... RAM_OFFSET + RAM_SIZE:
 			ram_StoreByte(cpu->devices->ram, new_offset, value);
-			log_Debug("Stored byte at 0x%X", new_offset);
+			// log_Debug("Stored byte at 0x%X", new_offset);
 			break;
 
 		default:
@@ -238,28 +238,27 @@ void store_Int(CPU *cpu, uint32_t offset, uint32_t value) {
 
 		// Write into MEM_CONTROL
 		case MEM_IO ... MEM_IO + MEM_IO_SIZE:
-			log_Debug("MEM_CONTROL write");
+			// log_Debug("MEM_CONTROL write");
 			break;
 		
 		// Ignore RAM configuration
 		case RAM_CONFIG ... RAM_CONFIG + RAM_CONFIG_SIZE:
-			log_Debug("RAM_CONFIG write");
+			// log_Debug("RAM_CONFIG write");
 			break;
 
 		// Cache Control
 		case CACHE_CONTROL ... CACHE_CONTROL + CACHE_CONTROL_SIZE:
-			log_Debug("CACHE_CONTROL write");
+			// log_Debug("CACHE_CONTROL write");
 			break;
 
 		case IRQ_CONTROL_OFFSET ... IRQ_CONTROL_OFFSET + IRQ_CONTROL_SIZE:
 			log_Debug("Unimplemented Interrupt Control Read");
-			value = 0x0;
 			break;
 
 		// RAM Area
 		case RAM_OFFSET ... RAM_OFFSET + RAM_SIZE:
 			ram_StoreInt(cpu->devices->ram, new_offset, value);
-			log_Debug("Stored int at 0x%X", new_offset);
+			// log_Debug("Stored int at 0x%X", new_offset);
 			break;
 
 		default:
@@ -689,7 +688,7 @@ void instruction_Srl(CPU *cpu) {
 }
 
 void instruction_Divu(CPU *cpu) {
-	// Unsigned division
+	// Division Unsigned
 	uint32_t s = getS(cpu->this_instruction);
 	uint32_t t = getT(cpu->this_instruction);
 
@@ -705,6 +704,28 @@ void instruction_Divu(CPU *cpu) {
 		cpu->LO = n / d;
 	}
 }
+
+void instruction_Mfhi(CPU *cpu) {
+	// Move From HI
+	uint32_t d = getD(cpu->this_instruction);
+	cpu_SetRegister(cpu, d, cpu->HI);
+}
+
+void instruction_Slt(CPU *cpu) {
+	// Set Less Than
+	uint32_t d = getD(cpu->this_instruction);
+	uint32_t s = getS(cpu->this_instruction);
+	uint32_t t = getT(cpu->this_instruction);
+
+	int32_t ns = (int32_t)cpu_GetRegister(cpu, s);
+	int32_t nt = (int32_t)cpu_GetRegister(cpu, t);
+	
+	cpu_SetRegister(cpu, d, (uint32_t)(ns < nt));
+}
+
+// void instruction_Syscall(CPU *cpu) {
+// 	cpu_Exception(cpu, EXCEPTION_SYSCALL);
+// }
 
 //
 // SPECIAL HANDLERS
@@ -753,6 +774,12 @@ void instruction_Special(CPU *cpu) {
 			break;
 		case DIVU:
 			instruction_Divu(cpu);
+			break;
+		case MFHI:
+			instruction_Mfhi(cpu);
+			break;
+		case SLT:
+			instruction_Slt(cpu);
 			break;
 		default:
 			log_Error("Unhandled SPECIAL Encoded Instruction 0x%08X, Subfunc 0x%X", 
@@ -830,8 +857,10 @@ void instruction_Mfc0(CPU *cpu) {
 			v = cpu->SR;
 			break;
 		case 13:
-			log_Error("Unhandled MFC0 cause register");
-			exit(1);
+			v = cpu->cause;
+			break;
+		case 14:
+			v = cpu->epc;
 			break;
 		default:
 			log_Error("Unknown MFC0 Register 0x%X", cop_r);
