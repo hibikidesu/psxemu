@@ -722,9 +722,9 @@ void instruction_Slt(CPU *cpu) {
 	cpu_SetRegister(cpu, d, (uint32_t)(ns < nt));
 }
 
-// void instruction_Syscall(CPU *cpu) {
-// 	cpu_Exception(cpu, EXCEPTION_SYSCALL);
-// }
+void instruction_Syscall(CPU *cpu) {
+	cpu_Exception(cpu, EXCEPTION_SYSCALL);
+}
 
 //
 // SPECIAL HANDLERS
@@ -779,6 +779,9 @@ void instruction_Special(CPU *cpu) {
 			break;
 		case SLT:
 			instruction_Slt(cpu);
+			break;
+		case SYSCALL:
+			instruction_Syscall(cpu);
 			break;
 		default:
 			log_Error("Unhandled SPECIAL Encoded Instruction 0x%08X, Subfunc 0x%X", 

@@ -16,7 +16,6 @@ typedef struct {
 	// Special Purpose Registers
 	uint32_t PC, NEXT_PC;
 	uint32_t HI, LO, SR;
-	uint32_t next_instruction;
 	uint32_t this_instruction;
 	uint32_t out_reg[32];
 	uint32_t load[2];

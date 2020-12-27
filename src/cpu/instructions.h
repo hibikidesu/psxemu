@@ -121,6 +121,7 @@
 // #define MTHI  0b010001
 // #define MTLO  0b010011
 // #define TRAP  0b011010
+#define SYSCALL 0b001100
 #define COP0  0b010000
 
 // Coprocessor Instructions
@@ -171,6 +172,7 @@ void instruction_Srl(CPU *cpu);
 void instruction_Divu(CPU *cpu);
 void instruction_Mfhi(CPU *cpu);
 void instruction_Slt(CPU *cpu);
+void instruction_Syscall(CPU *cpu);
 void instruction_Syscall(CPU *cpu);
 
 // Special handlers

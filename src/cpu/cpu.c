@@ -141,6 +141,29 @@ void cpu_ExecuteInstruction(CPU *cpu) {
 	}
 }
 
+void cpu_Exception(CPU *cpu, uint32_t cause) {
+	uint32_t handler;
+	uint32_t mode;
+	// BEV bit exception handler set by cop0
+	if ((cpu->SR & (1 << 22)) != 0) {
+		handler = 0xbfc00000;
+	} else {
+		handler = 0x80000080;
+	}
+
+	// Interrupt Enable/User Mode & Interrupt Disable/Kernel Mode
+	mode = cpu->SR & 0x3f;
+	cpu->SR &= ~0x3f;
+	cpu->SR |= (mode << 2) & 0x3f;
+	
+	cpu->cause = cause << 2;
+	cpu->epc = cpu->CURRENT_PC;
+
+	// Direct to handler
+	cpu->PC = handler;
+	cpu->NEXT_PC = cpu->PC + 4;
+}
+
 void cpu_CopyRegister(CPU *cpu) {
 	// Copy out register to register
 	memcpy(cpu->registers, cpu->out_reg, sizeof(cpu->registers));
@@ -166,13 +189,11 @@ void cpu_FetchInstruction(CPU *cpu) {
 }
 
 void cpu_NextInstruction(CPU *cpu) {
-	// Set this instruction
-	// cpu->this_instruction = cpu->next_instruction;
-
 	// Get next instruction
 	cpu_FetchInstruction(cpu);
 
 	// Incr to where the next instruction is
+	cpu->CURRENT_PC = cpu->PC;  // For exceptions
 	cpu->PC = cpu->NEXT_PC;
 	cpu->NEXT_PC = cpu->PC + 4;
 
@@ -201,7 +222,6 @@ void cpu_Reset(CPU *cpu) {
 	cpu->LO = 0;
 
 	// Set instructions
-	cpu->next_instruction = 0;
 	cpu->this_instruction = 0;
 
 	// Reset out and load registers
