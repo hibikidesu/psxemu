@@ -119,9 +119,37 @@ uint8_t load_Byte(CPU *cpu, uint32_t offset) {
 }
 
 uint16_t load_Short(CPU *cpu, uint32_t offset) {
-	// uint32_t new_offset;
-	log_Error("%s UNIMPLEMENTED", __FUNCTION__);
-	exit(1);
+	uint32_t new_offset = mask_region(offset);
+	uint16_t value;
+
+	switch (new_offset) {
+		// SPU
+		case SPU_OFFSET ... SPU_OFFSET + SPU_SIZE:
+			log_Debug("Unimplemented SPU short read");
+			value = 0x0;
+			break;
+
+		// RAM
+		case RAM_OFFSET ... RAM_OFFSET + RAM_SIZE:
+			value = ram_LoadShort(cpu->devices->ram, new_offset);
+			// log_Debug("%s Stored 0x%X at 0x%X (RAM)", __FUNCTION__, value, new_offset);
+			break;
+
+		// IRQ
+		case IRQ_CONTROL_OFFSET ... IRQ_CONTROL_OFFSET + IRQ_CONTROL_SIZE:
+			log_Debug("Unimplemented IRQ short read");
+			value = 0x0;
+			break;
+
+		default:
+			log_Error("%s Unkown memory read address 0x%X", 
+				__FUNCTION__, new_offset);
+			ram_Dump(cpu->devices->ram, "ram.bin");
+			exit(1);
+			break;
+	}
+
+	return value;
 }
 
 uint32_t load_Int(CPU *cpu, uint32_t offset) {
@@ -151,6 +179,25 @@ uint32_t load_Int(CPU *cpu, uint32_t offset) {
 		case IRQ_CONTROL_OFFSET ... IRQ_CONTROL_OFFSET + IRQ_CONTROL_SIZE:
 			log_Debug("Unimplemented Interrupt Control Read");
 			value = 0x0;
+			break;
+
+		// Direct Memory Access
+		case DMA_OFFSET ... DMA_OFFSET + DMA_SIZE:
+			log_Debug("Unimplemented DMA Read");
+			value = 0x0;
+			break;
+
+		// GPU
+		case GPU_OFFSET ... GPU_OFFSET + GPU_SIZE:
+			// log_Debug("Unimplemented GPU Read");
+			switch (new_offset - GPU_OFFSET) {
+				case 4:
+					value = 0x10000000;
+					break;
+				default:
+					value = 0x0;
+					break;
+			}
 			break;
 
 		default:
@@ -209,6 +256,16 @@ void store_Short(CPU *cpu, uint32_t offset, uint16_t value) {
 			log_Debug("Unimplemented timer store");
 			break;
 
+		// RAM
+		case RAM_OFFSET ... RAM_OFFSET + RAM_SIZE:
+			ram_StoreShort(cpu->devices->ram, new_offset, value);
+			break;
+
+		// IRQ
+		case IRQ_CONTROL_OFFSET ... IRQ_CONTROL_OFFSET + IRQ_CONTROL_SIZE:
+			log_Debug("Unimplemented IRQ short write");
+			break;
+
 		default:
 			log_Error("%s Not in memory control range, Address 0x%X, Tried to store 0x%X", 
 				__FUNCTION__, new_offset, value);
@@ -251,14 +308,30 @@ void store_Int(CPU *cpu, uint32_t offset, uint32_t value) {
 			// log_Debug("CACHE_CONTROL write");
 			break;
 
+		// IRQ
 		case IRQ_CONTROL_OFFSET ... IRQ_CONTROL_OFFSET + IRQ_CONTROL_SIZE:
-			log_Debug("Unimplemented Interrupt Control Read");
+			log_Debug("Unimplemented Interrupt Control Write");
 			break;
 
 		// RAM Area
 		case RAM_OFFSET ... RAM_OFFSET + RAM_SIZE:
 			ram_StoreInt(cpu->devices->ram, new_offset, value);
 			// log_Debug("Stored int at 0x%X", new_offset);
+			break;
+
+		// Direct Memory Access
+		case DMA_OFFSET ... DMA_OFFSET + DMA_SIZE - 1:
+			log_Debug("Unimplemented DMA Write");
+			break;
+
+		// GPU
+		case GPU_OFFSET ... GPU_OFFSET + GPU_SIZE:
+			log_Debug("Unimplemented GPU Write");
+			break;
+
+		// TIMERS
+		case TIMERS_OFFSET ... TIMERS_OFFSET + TIMERS_SIZE:
+			log_Debug("Unimplemented timer store");
 			break;
 
 		default:
@@ -272,6 +345,7 @@ void store_Int(CPU *cpu, uint32_t offset, uint32_t value) {
 void branch(CPU *cpu, uint32_t offset) {
 	uint32_t u = offset << 2;
 	cpu->NEXT_PC = cpu->PC + u;
+	cpu->branch = true;
 	// cpu->PC -= 4;
 }
 
@@ -344,7 +418,11 @@ void instruction_SW(CPU *cpu) {
 	uint32_t addr = cpu_GetRegister(cpu, s) + i;
 	uint32_t v = cpu_GetRegister(cpu, t);
 
-	store_Int(cpu, addr, v);
+	if ((addr % 4) == 0) {
+		store_Int(cpu, addr, v);
+	} else {
+		cpu_Exception(cpu, EXCEPTION_SAVEADDRERROR);
+	}
 
 	// log_Debug("0x%X: sw %s, 0x%X, %s", cpu->this_instruction, debugRegisterStrings[t], i, debugRegisterStrings[s]);
 }
@@ -374,6 +452,7 @@ void instruction_Addiu(CPU *cpu) {
 void instruction_J(CPU *cpu) {
 	uint32_t i = getJump(cpu->this_instruction);
 	cpu->NEXT_PC = (cpu->PC & 0xf0000000) | (i << 2);
+	cpu->branch = true;
 	// log_Debug("JUMP TO 0x%X", cpu->PC);
 
 	// log_Debug("0x%X: j 0x%X", cpu->this_instruction, i);
@@ -410,13 +489,13 @@ void instruction_Addi(CPU *cpu) {
 	int32_t new_s = (int32_t)cpu_GetRegister(cpu, s);
 
 	// Check for overflow
-	if ((new_s >= 0) && (i > (INT32_MAX - new_s))) {
-		log_Error("ADDI OVERFLOW");
-		exit(1);
+	int32_t v;
+	if (__builtin_sadd_overflow(new_s, i, &v)) {
+		cpu_Exception(cpu, EXCEPTION_OVERFLOW);
+		return;
 	}
 
-	uint32_t v = new_s + i;
-	cpu_SetRegister(cpu, t, v);
+	cpu_SetRegister(cpu, t, (uint32_t)v);
 
 	// log_Debug("0x%X: addi %s, %s, 0x%X", cpu->this_instruction, debugRegisterStrings[t], debugRegisterStrings[s], i);
 }
@@ -433,8 +512,12 @@ void instruction_Lw(CPU *cpu) {
 	uint32_t addr = cpu_GetRegister(cpu, s) + i;
 	uint32_t v = load_Int(cpu, addr);
 
-	// Put load in delay slot
-	cpu_SetLoadRegisters(cpu, t, v);
+	if ((addr % 4) == 0) {
+		// Put load in delay slot
+		cpu_SetLoadRegisters(cpu, t, v);
+	} else {
+		cpu_Exception(cpu, EXCEPITON_LOADADDRERROR);
+	}
 
 	// log_Debug("0x%X: lw %s, 0x%X, %s", cpu->this_instruction, debugRegisterStrings[t], i, debugRegisterStrings[s]);
 }
@@ -472,7 +555,11 @@ void instruction_Sh(CPU *cpu) {
 	uint32_t s = getS(cpu->this_instruction);
 	uint32_t addr = cpu_GetRegister(cpu, s) + i;
 
-	store_Short(cpu, addr, (uint16_t)cpu_GetRegister(cpu, t));
+	if ((addr % 2) == 0) {
+		store_Short(cpu, addr, (uint16_t)cpu_GetRegister(cpu, t));
+	} else {
+		cpu_Exception(cpu, EXCEPTION_SAVEADDRERROR);
+	}
 	
 	// log_Debug("0x%X: sh %s, 0x%X, %s", cpu->this_instruction, debugRegisterStrings[t], i, debugRegisterStrings[s]);
 }
@@ -483,6 +570,8 @@ void instruction_Jal(CPU *cpu) {
 
 	// Jump
 	instruction_J(cpu);
+
+	cpu->branch = true;
 
 	// log_Debug("0x%X: jal", cpu->this_instruction);
 }
@@ -516,6 +605,7 @@ void instruction_Sb(CPU *cpu) {
 void instruction_Jr(CPU *cpu) {
 	uint32_t s = getS(cpu->this_instruction);
 	cpu->NEXT_PC = cpu_GetRegister(cpu, s);
+	cpu->branch = true;
 	// log_Debug("0x%X: jr %s", cpu->this_instruction, debugRegisterStrings[s]);
 }
 
@@ -563,14 +653,13 @@ void instruction_Add(CPU *cpu) {
 	int32_t t_new = (int32_t)cpu_GetRegister(cpu, t);
 
 	// Check for overflow
-	if ((s_new >= 0) && (t_new > (INT32_MAX - s_new))) {
-		log_Error("ADD OVERFLOW");
-		exit(1);
+	int32_t v;
+	if (__builtin_sadd_overflow(s_new, t_new, &v)) {
+		cpu_Exception(cpu, EXCEPTION_OVERFLOW);
+		return;
 	}
 
-	uint32_t v = s_new + t_new;
-
-	cpu_SetRegister(cpu, d, v);
+	cpu_SetRegister(cpu, d, (uint32_t)v);
 }
 
 void instruction_Lbu(CPU *cpu) {
@@ -608,6 +697,7 @@ void instruction_Jalr(CPU *cpu) {
 	uint32_t s = getS(cpu->this_instruction);
 	cpu_SetRegister(cpu, d, cpu->NEXT_PC);
 	cpu->NEXT_PC = cpu_GetRegister(cpu, s);
+	cpu->branch = true;
 }
 
 void instruction_Slti(CPU *cpu) {
@@ -738,6 +828,138 @@ void instruction_Mthi(CPU *cpu) {
 	cpu->HI = cpu_GetRegister(cpu, s);
 }
 
+void instruction_Rfe(CPU *cpu) {
+	if ((cpu->this_instruction & 0x3f) != 0b010000) {
+		log_Error("Invalid instruction 0x%X", cpu->this_instruction);
+		exit(1);
+	}
+
+	uint32_t mode = cpu->SR & 0x3f;
+	cpu->SR &= !0x3f;
+	cpu->SR |= mode >> 2;
+}
+
+void instruction_Lhu(CPU *cpu) {
+	// Load Halfword Unsigned
+	uint32_t i = getISE(cpu->this_instruction);
+	uint32_t t = getT(cpu->this_instruction);
+	uint32_t s = getS(cpu->this_instruction);
+	uint32_t addr = cpu_GetRegister(cpu, s) + i;
+
+	if ((addr % 2) == 0) {
+		cpu_SetLoadRegisters(cpu, t, (uint32_t)load_Short(cpu, addr));
+	} else {
+		cpu_Exception(cpu, EXCEPITON_LOADADDRERROR);
+	}
+}
+
+void instruction_Sllv(CPU *cpu) {
+	// Shift Left Logical Value
+	uint32_t d = getD(cpu->this_instruction);
+	uint32_t s = getS(cpu->this_instruction);
+	uint32_t t = getT(cpu->this_instruction);
+	uint32_t v = cpu_GetRegister(cpu, t) << (cpu_GetRegister(cpu, s) & 0x1f);
+
+	cpu_SetRegister(cpu, d, v);
+}
+
+void instruction_Lh(CPU *cpu) {
+	// Load Halfword
+	uint32_t i = getISE(cpu->this_instruction);
+	uint32_t t = getT(cpu->this_instruction);
+	uint32_t s = getS(cpu->this_instruction);
+	uint32_t addr = cpu_GetRegister(cpu, s) + i;
+
+	if ((addr % 2) == 0) {
+		int16_t v = (int16_t)load_Short(cpu, addr);
+		cpu_SetLoadRegisters(cpu, t, (uint32_t)v);
+	} else {
+		cpu_Exception(cpu, EXCEPITON_LOADADDRERROR);
+	}
+}
+
+void instruction_Nor(CPU *cpu) {
+	uint32_t d = getD(cpu->this_instruction);
+	uint32_t s = getS(cpu->this_instruction);
+	uint32_t t = getT(cpu->this_instruction);
+	uint32_t v = !(cpu_GetRegister(cpu, s) | cpu_GetRegister(cpu, t));
+
+	cpu_SetRegister(cpu, d, v);
+}
+
+void instruction_Srav(CPU *cpu) {
+	uint32_t d = getD(cpu->this_instruction);
+	uint32_t s = getS(cpu->this_instruction);
+	uint32_t t = getT(cpu->this_instruction);
+	uint32_t v = ((int32_t)cpu_GetRegister(cpu, t)) >> (cpu_GetRegister(cpu, s) & 0x1f);
+
+	cpu_SetRegister(cpu, d, v);
+}
+
+void instruction_Srlv(CPU *cpu) {
+	uint32_t d = getD(cpu->this_instruction);
+	uint32_t s = getS(cpu->this_instruction);
+	uint32_t t = getT(cpu->this_instruction);
+	uint32_t v = cpu_GetRegister(cpu, t) >> (cpu_GetRegister(cpu, s) & 0x1f);
+
+	cpu_SetRegister(cpu, d, v);
+}
+
+void instruction_Multu(CPU *cpu) {
+	uint32_t s = getS(cpu->this_instruction);
+	uint32_t t = getT(cpu->this_instruction);
+
+	uint64_t a = cpu_GetRegister(cpu, s);
+	uint64_t b = cpu_GetRegister(cpu, t);
+	uint64_t v = a * b;
+
+	cpu->HI = (uint32_t)(v >> 32);
+	cpu->LO = (uint32_t)v;
+}
+
+void instruction_Xor(CPU *cpu) {
+	uint32_t d = getD(cpu->this_instruction);
+	uint32_t s = getS(cpu->this_instruction);
+	uint32_t t = getT(cpu->this_instruction);
+	uint32_t v = cpu_GetRegister(cpu, s) ^ cpu_GetRegister(cpu, t);
+
+	cpu_SetRegister(cpu, d, v);
+}
+
+void instruction_Break(CPU *cpu) {
+	cpu_Exception(cpu, EXCEPTION_BREAK);
+}
+
+void instruction_Mult(CPU *cpu) {
+	uint32_t s = getS(cpu->this_instruction);
+	uint32_t t = getT(cpu->this_instruction);
+
+	int64_t a = (int64_t)((int32_t)cpu_GetRegister(cpu, s));
+	int64_t b = (int64_t)((int32_t)cpu_GetRegister(cpu, t));
+	uint64_t v = a * b;
+
+	cpu->HI = (uint32_t)(v >> 32);
+	cpu->LO = (uint32_t)v;
+}
+
+void instruction_Sub(CPU *cpu) {
+	uint32_t s = getS(cpu->this_instruction);
+	uint32_t t = getT(cpu->this_instruction);
+	uint32_t d = getD(cpu->this_instruction);
+
+	int32_t ns = (int32_t)cpu_GetRegister(cpu, s);
+	int32_t nt = (int32_t)cpu_GetRegister(cpu, t);
+	int32_t v;
+
+	// Check unsigned overflow
+	if(__builtin_ssub_overflow(ns, nt, &v)) {
+		cpu_Exception(cpu, EXCEPTION_OVERFLOW);
+		return;
+	}
+
+	cpu_SetRegister(cpu, d, (uint32_t)v);
+}
+
 //
 // SPECIAL HANDLERS
 //
@@ -800,6 +1022,30 @@ void instruction_Special(CPU *cpu) {
 			break;
 		case MTHI:
 			instruction_Mthi(cpu);
+			break;
+		case SLLV:
+			instruction_Sllv(cpu);
+			break;
+		case NOR:
+			instruction_Nor(cpu);
+			break;
+		case SRAV:
+			instruction_Srav(cpu);
+			break;
+		case SRLV:
+			instruction_Srlv(cpu);
+			break;
+		case MULTU:
+			instruction_Multu(cpu);
+			break;
+		case XOR:
+			instruction_Xor(cpu);
+			break;
+		case BREAK:
+			instruction_Break(cpu);
+			break;
+		case MULT:
+			instruction_Mult(cpu);
 			break;
 		default:
 			log_Error("Unhandled SPECIAL Encoded Instruction 0x%08X, Subfunc 0x%X", 

@@ -2,3 +2,4 @@
 psxemu
 data/*
 .vscode
+ram.bin

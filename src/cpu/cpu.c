@@ -133,6 +133,12 @@ void cpu_ExecuteInstruction(CPU *cpu) {
 		case SLTI:
 			instruction_Slti(cpu);
 			break;
+		case LHU:
+			instruction_Lhu(cpu);
+			break;
+		case LH:
+			instruction_Lh(cpu);
+			break;
 		default:
 			log_Error("Unhandled Encoded Instruction 0x%08X", cpu->this_instruction);
 			cpu_DumpRegisters(cpu);
@@ -155,9 +161,14 @@ void cpu_Exception(CPU *cpu, uint32_t cause) {
 	mode = cpu->SR & 0x3f;
 	cpu->SR &= ~0x3f;
 	cpu->SR |= (mode << 2) & 0x3f;
-	
+
 	cpu->cause = cause << 2;
 	cpu->epc = cpu->CURRENT_PC;
+
+	if (cpu->delay_slot) {
+		cpu->epc = cpu->epc + 4;
+		cpu->cause |= 1 << 31;
+	}
 
 	// Direct to handler
 	cpu->PC = handler;
@@ -194,12 +205,21 @@ void cpu_NextInstruction(CPU *cpu) {
 
 	// Incr to where the next instruction is
 	cpu->CURRENT_PC = cpu->PC;  // For exceptions
+	// Check alignment
+	if ((cpu->CURRENT_PC % 4) != 0) {
+		cpu_Exception(cpu, EXCEPITON_LOADADDRERROR);
+		return;
+	}
+
 	cpu->PC = cpu->NEXT_PC;
 	cpu->NEXT_PC = cpu->PC + 4;
 
 	// Handle loading registers
 	cpu_SetRegister(cpu, cpu->load[0], cpu->load[1]);
 	cpu_SetLoadRegisters(cpu, 0, 0);
+
+	cpu->delay_slot = cpu->branch;
+	cpu->branch = false;
 
 	// Execute instruction
 	cpu_ExecuteInstruction(cpu);
@@ -220,6 +240,9 @@ void cpu_Reset(CPU *cpu) {
 	cpu->SR = 0;
 	cpu->HI = 0;
 	cpu->LO = 0;
+
+	cpu->branch = false;
+	cpu->delay_slot = false;
 
 	// Set instructions
 	cpu->this_instruction = 0;

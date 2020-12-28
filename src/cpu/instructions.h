@@ -31,6 +31,14 @@
 #define TIMERS_OFFSET 0x1f801100
 #define TIMERS_SIZE 0x30
 
+// DMA
+#define DMA_OFFSET 0x1f801080
+#define DMA_SIZE 0x80
+
+// GPU
+#define GPU_OFFSET 0x1F801810
+#define GPU_SIZE 8
+
 // KSEG2
 #define CACHE_CONTROL 0xFFFE0130
 #define CACHE_CONTROL_SIZE 4
@@ -79,20 +87,20 @@
 #define ANDI  0b001100
 #define DIV   0b011010
 #define DIVU  0b011011
-// #define MULT  0b011000
-// #define MULTU 0b011001
-// #define NOR   0b100111
+#define MULT  0b011000
+#define MULTU 0b011001
+#define NOR   0b100111
 #define OR    0b100101
 #define ORI   0b001101
 #define SLL   0b000000
-// #define SLLV  0b000100
+#define SLLV  0b000100
 #define SRA   0b000011
-// #define SRAV  0b000111
+#define SRAV  0b000111
 #define SRL   0b000010
-// #define SRLV  0b000110
+#define SRLV  0b000110
 // #define SUB   0b100010
 #define SUBU  0b100011
-// #define XOR   0b100110
+#define XOR   0b100110
 // #define XORI  0b001110
 // #define LHI   0b011001
 // #define LLO   0b011000
@@ -110,8 +118,8 @@
 #define JR    0b001000
 #define LB    0b100000
 #define LBU   0b100100
-// #define LH    0b100001
-// #define LHU   0b100101
+#define LH    0b100001
+#define LHU   0b100101
 #define LW    0b100011
 #define SB    0b101000
 #define SH    0b101001
@@ -122,6 +130,7 @@
 #define MTLO  0b010011
 // #define TRAP  0b011010
 #define SYSCALL 0b001100
+#define BREAK	0b001101
 #define COP0  0b010000
 
 // Coprocessor Instructions
@@ -129,6 +138,7 @@
 #define CFC 0b00010
 #define MTC 0b00100
 #define CTC 0b00110
+#define RFE 0b10000
 
 #define SPECIAL 0b000000
 #define REGIMM  0b000001
@@ -175,6 +185,17 @@ void instruction_Slt(CPU *cpu);
 void instruction_Syscall(CPU *cpu);
 void instruction_Mtlo(CPU *cpu);
 void instruction_Mthi(CPU *cpu);
+void instruction_Rfe(CPU *cpu);
+void instruction_Lhu(CPU *cpu);
+void instruction_Sllv(CPU *cpu);
+void instruction_Lh(CPU *cpu);
+void instruction_Nor(CPU *cpu);
+void instruction_Srav(CPU *cpu);
+void instruction_Srlv(CPU *cpu);
+void instruction_Multu(CPU *cpu);
+void instruction_Xor(CPU *cpu);
+void instruction_Break(CPU *cpu);
+void instruction_Mult(CPU *cpu);
 
 // Special handlers
 void instruction_Special(CPU *cpu);

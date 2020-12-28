@@ -5,8 +5,13 @@
 #include "../devices/devices.h"
 
 #include <stdint.h>
+#include <stdbool.h>
 
-#define EXCEPTION_SYSCALL 0x8
+#define EXCEPITON_LOADADDRERROR	0x4
+#define EXCEPTION_SAVEADDRERROR	0x5
+#define EXCEPTION_SYSCALL		0x8
+#define EXCEPTION_BREAK			0x9
+#define EXCEPTION_OVERFLOW		0xC
 
 typedef struct {
 	DEVICES *devices;
@@ -23,6 +28,8 @@ typedef struct {
 	uint32_t CURRENT_PC;
 	uint32_t cause;	// COP0 13 register
 	uint32_t epc;	// COP0 14 register
+	bool branch;
+	bool delay_slot;
 } CPU;
 
 void cpu_DumpRegisters(CPU *cpu);

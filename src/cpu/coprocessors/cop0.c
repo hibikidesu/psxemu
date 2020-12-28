@@ -20,6 +20,9 @@ void cop0_Handle(CPU *cpu) {
 		case MFC:
 			instruction_Mfc0(cpu);
 			break;
+		case RFE:
+			instruction_Rfe(cpu);
+			break;
 		default:
 			log_Error("Unhandled Encoded Instruction COP0: 0x%08X, CPU: 0x%08X", instruction, cpu->this_instruction);
 			exit(1);

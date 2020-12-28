@@ -6,8 +6,10 @@
 
 bool utils_AddressInRange(uint32_t address, uint32_t location, uint32_t size);
 uint8_t utils_LoadLittleEndianByte(uint8_t *data, uint32_t offset);
+uint16_t utils_LoadLittleEndianShort(uint8_t *data, uint32_t offset);
 uint32_t utils_LoadLittleEndianInt(uint8_t *data, uint32_t offset);
 void utils_StoreLittleEndianByte(uint8_t *data, uint32_t offset, uint8_t value);
+void utils_StoreLittleEndianShort(uint8_t *data, uint32_t offset, uint16_t value);
 void utils_StoreLittleEndianInt(uint8_t *data, uint32_t offset, uint32_t value);
 
 #endif
