@@ -29,3 +29,13 @@ void cop0_Handle(CPU *cpu) {
 			break;
 	}
 }
+
+// Load Word Coprocessor 0
+void lwc0_Handle(CPU *cpu) {
+	cpu_Exception(cpu, EXCEPTION_COPERROR);
+}
+
+// Store Word Coprocessor 0
+void swc0_Handle(CPU *cpu) {
+	cpu_Exception(cpu, EXCEPTION_COPERROR);
+}

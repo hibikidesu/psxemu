@@ -1086,7 +1086,7 @@ void instruction_Swl(CPU *cpu) {
 	}
 
 	// Write memory to aligned addr
-	store_Int(cpu, addr & !3, v);
+	store_Int(cpu, addr & !3, mem);
 }
 
 // Store Word Right
@@ -1122,7 +1122,7 @@ void instruction_Swr(CPU *cpu) {
 	}
 
 	// Write memory to aligned addr
-	store_Int(cpu, addr & !3, v);
+	store_Int(cpu, addr & !3, mem);
 }
 
 //

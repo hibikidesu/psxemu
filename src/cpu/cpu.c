@@ -167,6 +167,32 @@ void cpu_ExecuteInstruction(CPU *cpu) {
 		case COP3:
 			cop3_Handle(cpu);
 			break;
+		// Coprocessor Load
+		case LWC0:
+			lwc0_Handle(cpu);
+			break;
+		case LWC1:
+			lwc1_Handle(cpu);
+			break;
+		case LWC2:
+			lwc2_Handle(cpu);
+			break;
+		case LWC3:
+			lwc3_Handle(cpu);
+			break;
+		// Coprocessor Store
+		case SWC0:
+			swc0_Handle(cpu);
+			break;
+		case SWC1:
+			swc1_Handle(cpu);
+			break;
+		case SWC2:
+			swc2_Handle(cpu);
+			break;
+		case SWC3:
+			swc3_Handle(cpu);
+			break;
 		default:
 			log_Error("Unhandled Encoded Instruction 0x%08X", cpu->this_instruction);
 			cpu_DumpRegisters(cpu);
