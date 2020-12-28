@@ -4,11 +4,14 @@
 #include <string.h>
 #include "cpu.h"
 #include "instructions.h"
-#include "coprocessors/cop0.h"
 #include "../devices/devices.h"
 #include "../devices/bios.h"
 #include "../utils/logger.h"
 #include "../utils/ansi.h"
+#include "coprocessors/cop0.h"
+#include "coprocessors/cop1.h"
+#include "coprocessors/cop2.h"
+#include "coprocessors/cop3.h"
 
 const static char *debugRegisterStrings[32] = {
 	"$zero",
@@ -85,9 +88,6 @@ void cpu_ExecuteInstruction(CPU *cpu) {
 		case J:
 			instruction_J(cpu);
 			break;
-		case COP0:
-			cop0_Handle(cpu);
-			break;
 		case BNE:
 			instruction_Bne(cpu);
 			break;
@@ -141,6 +141,19 @@ void cpu_ExecuteInstruction(CPU *cpu) {
 			break;
 		case XORI:
 			instruction_Xori(cpu);
+			break;
+		// Coprocessors
+		case COP0:
+			cop0_Handle(cpu);
+			break;
+		case COP1:
+			cop1_Handle(cpu);
+			break;
+		case COP2:
+			cop2_Handle(cpu);
+			break;
+		case COP3:
+			cop3_Handle(cpu);
 			break;
 		default:
 			log_Error("Unhandled Encoded Instruction 0x%08X", cpu->this_instruction);
