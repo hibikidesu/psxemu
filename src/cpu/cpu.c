@@ -195,8 +195,7 @@ void cpu_ExecuteInstruction(CPU *cpu) {
 			break;
 		default:
 			log_Error("Unhandled Encoded Instruction 0x%08X", cpu->this_instruction);
-			cpu_DumpRegisters(cpu);
-			exit(1);
+			cpu_Exception(cpu, EXCEPTION_ILLEGAL_INS);
 			break;
 	}
 }

@@ -7,12 +7,21 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+// Exceptions
+#define EXCEPTION_INTERRUPT		0x0
+#define EXCEPTION_TLB_MOD		0x1
+#define EXCEPTION_TLB_LOAD		0x2
+#define EXCEPTION_TLB_STORE		0x3
 #define EXCEPITON_LOADADDRERROR	0x4
 #define EXCEPTION_SAVEADDRERROR	0x5
+#define EXCEPTION_BUS_FETCH		0x6
+#define EXCEPTION_BUS_STORE		0x7
 #define EXCEPTION_SYSCALL		0x8
 #define EXCEPTION_BREAK			0x9
+#define EXCEPTION_ILLEGAL_INS	0xA
 #define EXCEPTION_COPERROR		0xB
 #define EXCEPTION_OVERFLOW		0xC
+// D-F unused
 
 typedef struct {
 	DEVICES *devices;

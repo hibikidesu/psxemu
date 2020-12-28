@@ -6,6 +6,7 @@
 #include "../utils/utils.h"
 #include "../devices/ram.h"
 #include "../devices/bios.h"
+#include "../devices/dma.h"
 #include "../utils/logger.h"
 
 //

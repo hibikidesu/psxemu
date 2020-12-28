@@ -3,10 +3,12 @@
 
 #include "bios.h"
 #include "ram.h"
+#include "dma.h"
 
 typedef struct {
 	BIOS *bios;
 	RAM *ram;
+	DMA *dma;
 } DEVICES;
 
 void devices_AddRAM(DEVICES *devices, RAM *ram);

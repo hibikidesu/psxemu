@@ -31,10 +31,6 @@
 #define TIMERS_OFFSET 0x1f801100
 #define TIMERS_SIZE 0x30
 
-// DMA
-#define DMA_OFFSET 0x1f801080
-#define DMA_SIZE 0x80
-
 // GPU
 #define GPU_OFFSET 0x1F801810
 #define GPU_SIZE 8
