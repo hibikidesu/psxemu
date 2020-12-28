@@ -139,6 +139,9 @@ void cpu_ExecuteInstruction(CPU *cpu) {
 		case LH:
 			instruction_Lh(cpu);
 			break;
+		case XORI:
+			instruction_Xori(cpu);
+			break;
 		default:
 			log_Error("Unhandled Encoded Instruction 0x%08X", cpu->this_instruction);
 			cpu_DumpRegisters(cpu);

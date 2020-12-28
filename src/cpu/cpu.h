@@ -11,6 +11,7 @@
 #define EXCEPTION_SAVEADDRERROR	0x5
 #define EXCEPTION_SYSCALL		0x8
 #define EXCEPTION_BREAK			0x9
+#define EXCEPTION_COPERROR		0xB
 #define EXCEPTION_OVERFLOW		0xC
 
 typedef struct {

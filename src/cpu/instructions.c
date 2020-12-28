@@ -888,6 +888,7 @@ void instruction_Nor(CPU *cpu) {
 }
 
 void instruction_Srav(CPU *cpu) {
+	// Shift Word Right Arithmetic Variable
 	uint32_t d = getD(cpu->this_instruction);
 	uint32_t s = getS(cpu->this_instruction);
 	uint32_t t = getT(cpu->this_instruction);
@@ -897,6 +898,7 @@ void instruction_Srav(CPU *cpu) {
 }
 
 void instruction_Srlv(CPU *cpu) {
+	// Shift Word Right Logical Variable
 	uint32_t d = getD(cpu->this_instruction);
 	uint32_t s = getS(cpu->this_instruction);
 	uint32_t t = getT(cpu->this_instruction);
@@ -906,6 +908,7 @@ void instruction_Srlv(CPU *cpu) {
 }
 
 void instruction_Multu(CPU *cpu) {
+	// Multily Unsigned Word
 	uint32_t s = getS(cpu->this_instruction);
 	uint32_t t = getT(cpu->this_instruction);
 
@@ -918,6 +921,7 @@ void instruction_Multu(CPU *cpu) {
 }
 
 void instruction_Xor(CPU *cpu) {
+	// Exclusive OR
 	uint32_t d = getD(cpu->this_instruction);
 	uint32_t s = getS(cpu->this_instruction);
 	uint32_t t = getT(cpu->this_instruction);
@@ -927,10 +931,12 @@ void instruction_Xor(CPU *cpu) {
 }
 
 void instruction_Break(CPU *cpu) {
+	// Breakpoint
 	cpu_Exception(cpu, EXCEPTION_BREAK);
 }
 
 void instruction_Mult(CPU *cpu) {
+	// Multiply Word
 	uint32_t s = getS(cpu->this_instruction);
 	uint32_t t = getT(cpu->this_instruction);
 
@@ -943,6 +949,7 @@ void instruction_Mult(CPU *cpu) {
 }
 
 void instruction_Sub(CPU *cpu) {
+	// Subtract Word
 	uint32_t s = getS(cpu->this_instruction);
 	uint32_t t = getT(cpu->this_instruction);
 	uint32_t d = getD(cpu->this_instruction);
@@ -958,6 +965,16 @@ void instruction_Sub(CPU *cpu) {
 	}
 
 	cpu_SetRegister(cpu, d, (uint32_t)v);
+}
+
+void instruction_Xori(CPU *cpu) {
+	// Exclusive OR Immediate
+	uint32_t i = getISE(cpu->this_instruction);
+	uint32_t t = getT(cpu->this_instruction);
+	uint32_t s = getS(cpu->this_instruction);
+	uint32_t v = cpu_GetRegister(cpu, s) ^ i;
+
+	cpu_SetRegister(cpu, t, v);
 }
 
 //
@@ -1046,6 +1063,9 @@ void instruction_Special(CPU *cpu) {
 			break;
 		case MULT:
 			instruction_Mult(cpu);
+			break;
+		case SUB:
+			instruction_Sub(cpu);
 			break;
 		default:
 			log_Error("Unhandled SPECIAL Encoded Instruction 0x%08X, Subfunc 0x%X", 

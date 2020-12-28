@@ -98,10 +98,10 @@
 #define SRAV  0b000111
 #define SRL   0b000010
 #define SRLV  0b000110
-// #define SUB   0b100010
+#define SUB   0b100010
 #define SUBU  0b100011
 #define XOR   0b100110
-// #define XORI  0b001110
+#define XORI  0b001110
 // #define LHI   0b011001
 // #define LLO   0b011000
 #define SLT   0b101010
@@ -131,7 +131,6 @@
 // #define TRAP  0b011010
 #define SYSCALL 0b001100
 #define BREAK	0b001101
-#define COP0  0b010000
 
 // Coprocessor Instructions
 #define MFC 0b00000
@@ -196,6 +195,8 @@ void instruction_Multu(CPU *cpu);
 void instruction_Xor(CPU *cpu);
 void instruction_Break(CPU *cpu);
 void instruction_Mult(CPU *cpu);
+void instruction_Sub(CPU *cpu);
+void instruction_Xori(CPU *cpu);
 
 // Special handlers
 void instruction_Special(CPU *cpu);
