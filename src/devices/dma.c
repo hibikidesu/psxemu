@@ -5,9 +5,9 @@
 #include "channel.h"
 #include "../utils/logger.h"
 
-CHANNEL *dma_GetChannelFromIndex(DMA *dma, uint8_t channel) {
+CHANNEL *dma_GetChannelFromIndex(DMA *dma, uint8_t index) {
 	CHANNEL *channel = NULL;
-	switch (channel) {
+	switch (index) {
 		case 0:
 			channel = dma->MDECin;
 			break;
@@ -30,7 +30,7 @@ CHANNEL *dma_GetChannelFromIndex(DMA *dma, uint8_t channel) {
 			channel = dma->OTC;
 			break;
 		default:
-			log_Error("%s Unknown Channel 0x%X", __FUNCTION__, channel);
+			log_Error("%s Unknown Channel 0x%X", __FUNCTION__, index);
 			exit(1);
 			break;
 	}
@@ -69,16 +69,47 @@ void dma_SetInterrupt(DMA *dma, uint32_t value) {
 
 uint32_t dma_ReadRegister(DMA *dma, uint32_t offset) {
 	uint32_t v;
+	CHANNEL *channel = NULL;
+	uint32_t major = (offset & 0x70) >> 4;
+	uint32_t minor = offset & 0xf;
 
-	switch (offset - DMA_OFFSET) {
-		case DMA_CONTROL:
-			v = dma->CONTROL;
+	// notlikebep
+	switch (major) {
+		// Channels
+		case 0 ... 6:
+			channel = dma_GetChannelFromIndex(dma, major);
+			switch (minor) {
+				// Return Control
+				case 8:
+					v = channel_GetControl(channel);
+					break;
+				default:
+					log_Error("%s Unknown Offset 0x%X", __FUNCTION__, offset);
+					exit(1);
+					break;
+			}
 			break;
-		case DMA_INTERRUPT:
-			v = dma_GetInterrupt(dma);
+
+		// Common Registers
+		case 7:
+			switch (minor) {
+				// Control
+				case 0:
+					v = dma->CONTROL;
+					break;
+				// Interrupt
+				case 4:
+					v = dma_GetInterrupt(dma);
+					break;
+				default:
+					log_Error("%s Unknown Offset 0x%X", __FUNCTION__, offset);
+					exit(1);
+					break;
+			}
 			break;
+
 		default:
-			log_Debug("%s Unhandled Access 0x%X", __FUNCTION__, offset - DMA_OFFSET);
+			log_Error("%s Unknown Offset 0x%X", __FUNCTION__, offset);
 			exit(1);
 			break;
 	}
@@ -87,15 +118,47 @@ uint32_t dma_ReadRegister(DMA *dma, uint32_t offset) {
 }
 
 void dma_SetRegister(DMA *dma, uint32_t offset, uint32_t value) {
-	switch (offset - DMA_OFFSET) {
-		case DMA_CONTROL:
-			dma_SetControl(dma, value);
+	uint32_t major = (offset & 0x70) >> 4;
+	uint32_t minor = offset & 0xf;
+	CHANNEL *channel = NULL;
+
+	// another notlikebep
+	switch (major) {
+		// Channels
+		case 0 ... 6:
+			channel = dma_GetChannelFromIndex(dma, major);
+			switch (minor) {
+				// Set Control
+				case 8:
+					channel_SetControl(channel, value);
+					break;
+				default:
+					log_Error("%s Unknown Offset 0x%X", __FUNCTION__, offset);
+					exit(1);
+					break;
+			}
 			break;
-		case DMA_INTERRUPT:
-			dma_SetInterrupt(dma, value);
+
+		// Common Registers
+		case 7:
+			switch (minor) {
+				// Control
+				case 0:
+					dma_SetControl(dma, value);
+					break;
+				// Interrupt
+				case 4:
+					dma_SetInterrupt(dma, value);
+					break;
+				default:
+					log_Error("%s Unknown Offset 0x%X", __FUNCTION__, offset);
+					exit(1);
+					break;
+			}
 			break;
+
 		default:
-			log_Debug("%s Unhandled Access 0x%X", __FUNCTION__, offset - DMA_OFFSET);
+			log_Error("%s Unknown Offset 0x%X", __FUNCTION__, offset);
 			exit(1);
 			break;
 	}

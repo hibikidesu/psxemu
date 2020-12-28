@@ -184,7 +184,7 @@ uint32_t load_Int(CPU *cpu, uint32_t offset) {
 
 		// Direct Memory Access
 		case DMA_OFFSET ... DMA_OFFSET + DMA_SIZE:
-			value = dma_ReadRegister(cpu->devices->dma, new_offset);
+			value = dma_ReadRegister(cpu->devices->dma, new_offset - DMA_OFFSET);
 			break;
 
 		// GPU
@@ -321,7 +321,7 @@ void store_Int(CPU *cpu, uint32_t offset, uint32_t value) {
 
 		// Direct Memory Access
 		case DMA_OFFSET ... DMA_OFFSET + DMA_SIZE - 1:
-			dma_SetRegister(cpu->devices->dma, new_offset, value);
+			dma_SetRegister(cpu->devices->dma, new_offset - DMA_OFFSET, value);
 			break;
 
 		// GPU

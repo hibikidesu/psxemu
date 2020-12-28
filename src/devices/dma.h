@@ -9,10 +9,6 @@
 #define DMA_OFFSET 0x1f801080
 #define DMA_SIZE 0x80
 
-// Register Loads/Stores
-#define DMA_CONTROL 0x70
-#define DMA_INTERRUPT 0x74
-
 typedef struct {
 	// 7 Channels
 	CHANNEL *MDECin;
