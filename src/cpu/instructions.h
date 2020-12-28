@@ -128,6 +128,10 @@
 #define MFLO  0b010010
 #define MTHI  0b010001
 #define MTLO  0b010011
+#define LWL   0b100010
+#define LWR   0b100110
+#define SWL   0b101010
+#define SWR   0b101110
 // #define TRAP  0b011010
 #define SYSCALL 0b001100
 #define BREAK	0b001101
@@ -197,6 +201,10 @@ void instruction_Break(CPU *cpu);
 void instruction_Mult(CPU *cpu);
 void instruction_Sub(CPU *cpu);
 void instruction_Xori(CPU *cpu);
+void instruction_Lwl(CPU *cpu);
+void instruction_Lwr(CPU *cpu);
+void instruction_Swl(CPU *cpu);
+void instruction_Swr(CPU *cpu);
 
 // Special handlers
 void instruction_Special(CPU *cpu);

@@ -761,8 +761,8 @@ void instruction_Div(CPU *cpu) {
 	}
 }
 
+// Move LO to a register
 void instruction_Mflo(CPU *cpu) {
-	// Move LO to a register
 	uint32_t d = getD(cpu->this_instruction);
 	cpu_SetRegister(cpu, d, cpu->LO);
 }
@@ -776,8 +776,8 @@ void instruction_Srl(CPU *cpu) {
 	cpu_SetRegister(cpu, d, v);
 }
 
+// Division Unsigned
 void instruction_Divu(CPU *cpu) {
-	// Division Unsigned
 	uint32_t s = getS(cpu->this_instruction);
 	uint32_t t = getT(cpu->this_instruction);
 
@@ -794,14 +794,14 @@ void instruction_Divu(CPU *cpu) {
 	}
 }
 
+// Move From HI
 void instruction_Mfhi(CPU *cpu) {
-	// Move From HI
 	uint32_t d = getD(cpu->this_instruction);
 	cpu_SetRegister(cpu, d, cpu->HI);
 }
 
+// Set Less Than
 void instruction_Slt(CPU *cpu) {
-	// Set Less Than
 	uint32_t d = getD(cpu->this_instruction);
 	uint32_t s = getS(cpu->this_instruction);
 	uint32_t t = getT(cpu->this_instruction);
@@ -816,14 +816,14 @@ void instruction_Syscall(CPU *cpu) {
 	cpu_Exception(cpu, EXCEPTION_SYSCALL);
 }
 
+// Move To LO
 void instruction_Mtlo(CPU *cpu) {
-	// Move To LO
 	uint32_t s = getS(cpu->this_instruction);
 	cpu->LO = cpu_GetRegister(cpu, s);
 }
 
+// Move To HI
 void instruction_Mthi(CPU *cpu) {
-	// Move To HI
 	uint32_t s = getS(cpu->this_instruction);
 	cpu->HI = cpu_GetRegister(cpu, s);
 }
@@ -839,8 +839,8 @@ void instruction_Rfe(CPU *cpu) {
 	cpu->SR |= mode >> 2;
 }
 
+// Load Halfword Unsigned
 void instruction_Lhu(CPU *cpu) {
-	// Load Halfword Unsigned
 	uint32_t i = getISE(cpu->this_instruction);
 	uint32_t t = getT(cpu->this_instruction);
 	uint32_t s = getS(cpu->this_instruction);
@@ -853,8 +853,8 @@ void instruction_Lhu(CPU *cpu) {
 	}
 }
 
+// Shift Left Logical Value
 void instruction_Sllv(CPU *cpu) {
-	// Shift Left Logical Value
 	uint32_t d = getD(cpu->this_instruction);
 	uint32_t s = getS(cpu->this_instruction);
 	uint32_t t = getT(cpu->this_instruction);
@@ -863,8 +863,8 @@ void instruction_Sllv(CPU *cpu) {
 	cpu_SetRegister(cpu, d, v);
 }
 
+// Load Halfword
 void instruction_Lh(CPU *cpu) {
-	// Load Halfword
 	uint32_t i = getISE(cpu->this_instruction);
 	uint32_t t = getT(cpu->this_instruction);
 	uint32_t s = getS(cpu->this_instruction);
@@ -887,8 +887,8 @@ void instruction_Nor(CPU *cpu) {
 	cpu_SetRegister(cpu, d, v);
 }
 
+// Shift Word Right Arithmetic Variable
 void instruction_Srav(CPU *cpu) {
-	// Shift Word Right Arithmetic Variable
 	uint32_t d = getD(cpu->this_instruction);
 	uint32_t s = getS(cpu->this_instruction);
 	uint32_t t = getT(cpu->this_instruction);
@@ -897,8 +897,8 @@ void instruction_Srav(CPU *cpu) {
 	cpu_SetRegister(cpu, d, v);
 }
 
+// Shift Word Right Logical Variable
 void instruction_Srlv(CPU *cpu) {
-	// Shift Word Right Logical Variable
 	uint32_t d = getD(cpu->this_instruction);
 	uint32_t s = getS(cpu->this_instruction);
 	uint32_t t = getT(cpu->this_instruction);
@@ -907,8 +907,8 @@ void instruction_Srlv(CPU *cpu) {
 	cpu_SetRegister(cpu, d, v);
 }
 
+// Multily Unsigned Word
 void instruction_Multu(CPU *cpu) {
-	// Multily Unsigned Word
 	uint32_t s = getS(cpu->this_instruction);
 	uint32_t t = getT(cpu->this_instruction);
 
@@ -920,8 +920,8 @@ void instruction_Multu(CPU *cpu) {
 	cpu->LO = (uint32_t)v;
 }
 
+// Exclusive OR
 void instruction_Xor(CPU *cpu) {
-	// Exclusive OR
 	uint32_t d = getD(cpu->this_instruction);
 	uint32_t s = getS(cpu->this_instruction);
 	uint32_t t = getT(cpu->this_instruction);
@@ -930,13 +930,13 @@ void instruction_Xor(CPU *cpu) {
 	cpu_SetRegister(cpu, d, v);
 }
 
+// Breakpoint
 void instruction_Break(CPU *cpu) {
-	// Breakpoint
 	cpu_Exception(cpu, EXCEPTION_BREAK);
 }
 
+// Multiply Word
 void instruction_Mult(CPU *cpu) {
-	// Multiply Word
 	uint32_t s = getS(cpu->this_instruction);
 	uint32_t t = getT(cpu->this_instruction);
 
@@ -948,8 +948,8 @@ void instruction_Mult(CPU *cpu) {
 	cpu->LO = (uint32_t)v;
 }
 
+// Subtract Word
 void instruction_Sub(CPU *cpu) {
-	// Subtract Word
 	uint32_t s = getS(cpu->this_instruction);
 	uint32_t t = getT(cpu->this_instruction);
 	uint32_t d = getD(cpu->this_instruction);
@@ -967,14 +967,162 @@ void instruction_Sub(CPU *cpu) {
 	cpu_SetRegister(cpu, d, (uint32_t)v);
 }
 
+// Exclusive OR Immediate
 void instruction_Xori(CPU *cpu) {
-	// Exclusive OR Immediate
 	uint32_t i = getISE(cpu->this_instruction);
 	uint32_t t = getT(cpu->this_instruction);
 	uint32_t s = getS(cpu->this_instruction);
 	uint32_t v = cpu_GetRegister(cpu, s) ^ i;
 
 	cpu_SetRegister(cpu, t, v);
+}
+
+// Load Word Left
+void instruction_Lwl(CPU *cpu) {
+	uint32_t i = getISE(cpu->this_instruction);
+	uint32_t t = getT(cpu->this_instruction);
+	uint32_t s = getS(cpu->this_instruction);
+	uint32_t addr = cpu_GetRegister(cpu, s) + i;
+
+	// Merge with value currently being loaded.
+	uint32_t cur_v = cpu->out_reg[t];
+
+	// Load aligned word with aligned address
+	uint32_t aligned_word = load_Int(cpu, addr & !3);
+	uint32_t v;
+
+	// Get most sig bits depending on alignment
+	switch (addr & 3) {
+		case 0:
+			v = (cur_v & 0x00ffffff) | (aligned_word << 24);
+			break;
+		case 1:
+			v = (cur_v & 0x0000ffff) | (aligned_word << 16);
+			break;
+		case 2:
+			v = (cur_v & 0x000000ff) | (aligned_word << 8);
+			break;
+		case 3:
+			v = (cur_v & 0x00000000) | (aligned_word << 0);
+			break;
+		default:
+			log_Error("%s Unkown Value", __FUNCTION__);
+			exit(1);
+			break;
+	}
+
+	// Set into load delay register
+	cpu_SetLoadRegisters(cpu, t, v);
+}
+
+// Load Word Right
+void instruction_Lwr(CPU *cpu) {
+	uint32_t i = getISE(cpu->this_instruction);
+	uint32_t t = getT(cpu->this_instruction);
+	uint32_t s = getS(cpu->this_instruction);
+	uint32_t addr = cpu_GetRegister(cpu, s) + i;
+
+	// Merge with value currently being loaded.
+	uint32_t cur_v = cpu->out_reg[t];
+
+	// Load aligned word with aligned address
+	uint32_t aligned_word = load_Int(cpu, addr & !3);
+	uint32_t v;
+
+	// Get least sig bits depending on alignment
+	switch (addr & 3) {
+		case 0:
+			v = (cur_v & 0x00000000) | (aligned_word >> 0);
+			break;
+		case 1:
+			v = (cur_v & 0xff000000) | (aligned_word >> 8);
+			break;
+		case 2:
+			v = (cur_v & 0xffff0000) | (aligned_word >> 16);
+			break;
+		case 3:
+			v = (cur_v & 0xffffff00) | (aligned_word >> 24);
+			break;
+		default:
+			log_Error("%s Unkown Value", __FUNCTION__);
+			exit(1);
+			break;
+	}
+
+	// Set into load delay register
+	cpu_SetLoadRegisters(cpu, t, v);
+}
+
+// Store Word Left
+void instruction_Swl(CPU *cpu) {
+	uint32_t i = getISE(cpu->this_instruction);
+	uint32_t t = getT(cpu->this_instruction);
+	uint32_t s = getS(cpu->this_instruction);
+	uint32_t addr = cpu_GetRegister(cpu, s) + i;
+	uint32_t v = cpu_GetRegister(cpu, t);
+
+	// Load memory from aligned address
+	uint32_t cur_mem = load_Int(cpu, addr & !3);
+	uint32_t mem;
+
+	// From most sig bits
+	switch (addr & 3) {
+		case 0:
+			mem = (cur_mem & 0xffffff00) | (v >> 24);
+			break;
+		case 1:
+			mem = (cur_mem & 0xffff0000) | (v >> 16);
+			break;
+		case 2:
+			mem = (cur_mem & 0xff000000) | (v >> 8);
+			break;
+		case 3:
+			mem = (cur_mem & 0x00000000) | (v >> 0);
+			break;
+		default:
+			log_Error("%s Unkown Value", __FUNCTION__);
+			exit(1);
+			break;
+	}
+
+	// Write memory to aligned addr
+	store_Int(cpu, addr & !3, v);
+}
+
+// Store Word Right
+void instruction_Swr(CPU *cpu) {
+	uint32_t i = getISE(cpu->this_instruction);
+	uint32_t t = getT(cpu->this_instruction);
+	uint32_t s = getS(cpu->this_instruction);
+	uint32_t addr = cpu_GetRegister(cpu, s) + i;
+	uint32_t v = cpu_GetRegister(cpu, t);
+
+	// Load memory from aligned address
+	uint32_t cur_mem = load_Int(cpu, addr & !3);
+	uint32_t mem;
+
+	// From least sig bits
+	switch (addr & 3) {
+		case 0:
+			mem = (cur_mem & 0x00000000) | (v << 0);
+			break;
+		case 1:
+			mem = (cur_mem & 0x000000ff) | (v << 8);
+			break;
+		case 2:
+			mem = (cur_mem & 0x0000ffff) | (v << 16);
+			break;
+		case 3:
+			mem = (cur_mem & 0x00ffffff) | (v << 24);
+			break;
+		default:
+			log_Error("%s Unkown Value", __FUNCTION__);
+			exit(1);
+			break;
+	}
+
+	// Write memory to aligned addr
+	store_Int(cpu, addr & !3, v);
 }
 
 //

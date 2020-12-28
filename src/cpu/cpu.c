@@ -142,6 +142,18 @@ void cpu_ExecuteInstruction(CPU *cpu) {
 		case XORI:
 			instruction_Xori(cpu);
 			break;
+		case LWL:
+			instruction_Lwl(cpu);
+			break;
+		case LWR:
+			instruction_Lwr(cpu);
+			break;
+		case SWL:
+			instruction_Swl(cpu);
+			break;
+		case SWR:
+			instruction_Swr(cpu);
+			break;
 		// Coprocessors
 		case COP0:
 			cop0_Handle(cpu);
