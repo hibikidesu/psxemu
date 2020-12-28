@@ -36,6 +36,8 @@ typedef struct {
 	uint32_t base;
 } CHANNEL;
 
+void channel_SetDone(CHANNEL *channel);
+uint32_t channel_GetTransferSize(CHANNEL *channel);
 bool channel_IsActive(CHANNEL *channel);
 uint32_t channel_GetBlockControl(CHANNEL *channel);
 void channel_SetBlockControl(CHANNEL *channel, uint32_t value);

@@ -4,6 +4,33 @@
 #include "channel.h"
 #include "../utils/logger.h"
 
+void channel_SetDone(CHANNEL *channel) {
+	channel->enable = false;
+	channel->trigger = false;
+}
+
+uint32_t channel_GetTransferSize(CHANNEL *channel) {
+	uint32_t size = 0;
+	uint32_t bs = (uint32_t)channel->block_size;
+	uint32_t bc = (uint32_t)channel->block_count;
+
+	switch (channel->sync) {
+		case manual:
+			size = bs;
+			break;
+		case request:
+			size = bc * bs;
+			break;
+		case linkedList:
+			size = 0xffffff;
+			break;
+		default:
+			break;
+	}
+
+	return size;
+}
+
 bool channel_IsActive(CHANNEL *channel) {
 	bool trigger;
 	if (channel->sync == manual) {
