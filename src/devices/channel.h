@@ -30,8 +30,17 @@ typedef struct {
 	uint8_t chop_cpu_s;
 	bool trigger;
 	uint8_t dummy;
+	uint16_t block_size;
+	uint16_t block_count;
+	// DMA Start Address
+	uint32_t base;
 } CHANNEL;
 
+bool channel_IsActive(CHANNEL *channel);
+uint32_t channel_GetBlockControl(CHANNEL *channel);
+void channel_SetBlockControl(CHANNEL *channel, uint32_t value);
+uint32_t channel_GetBase(CHANNEL *channel);
+void channel_SetBase(CHANNEL *channel, uint32_t value);
 uint32_t channel_GetControl(CHANNEL *channel);
 void channel_SetControl(CHANNEL *channel, uint32_t value);
 void channel_Reset(CHANNEL *channel);

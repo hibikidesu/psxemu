@@ -28,11 +28,12 @@ typedef struct {
 	uint8_t irq_dummy;
 } DMA;
 
+void dma_SetControl(DMA *dma, uint32_t value);
+void dma_DumpChannels(DMA *dma);
 CHANNEL *dma_GetChannelFromIndex(DMA *dma, uint8_t channel);
 bool dma_GetIRQ(DMA *dma);
 uint32_t dma_GetInterrupt(DMA *dma);
 void dma_SetInterrupt(DMA *dma, uint32_t value);
-void dma_SetRegister(DMA *dma, uint32_t offset, uint32_t value);
 uint32_t dma_ReadRegister(DMA *dma, uint32_t offset);
 void dma_Reset(DMA *dma);
 DMA *dma_Create();

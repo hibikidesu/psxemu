@@ -11,6 +11,7 @@ typedef struct {
 	DMA *dma;
 } DEVICES;
 
+void devices_DMASetRegister(DEVICES *devices, uint32_t offset, uint32_t value);
 void devices_AddRAM(DEVICES *devices, RAM *ram);
 void devices_AddBios(DEVICES *devices, BIOS *bios);
 DEVICES *devices_Create();

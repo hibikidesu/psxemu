@@ -1,7 +1,40 @@
 #include <stdlib.h>
 #include <stdint.h>
+#include <stdbool.h>
 #include "channel.h"
 #include "../utils/logger.h"
+
+bool channel_IsActive(CHANNEL *channel) {
+	bool trigger;
+	if (channel->sync == manual) {
+		trigger = channel->trigger;
+	} else {
+		trigger = true;
+	}
+	
+	return channel->enable && trigger;
+}
+
+// Pack Block to Channel
+uint32_t channel_GetBlockControl(CHANNEL *channel) {
+	uint32_t bs = (uint32_t)channel->block_size;
+	uint32_t bc = (uint32_t)channel->block_count;
+	return (bc << 16) | bs;
+}
+
+// Unpack Block value in Channel
+void channel_SetBlockControl(CHANNEL *channel, uint32_t value) {
+	channel->block_size = (uint16_t)value;
+	channel->block_count = (uint16_t)(value >> 16);
+}
+
+uint32_t channel_GetBase(CHANNEL *channel) {
+	return channel->base;
+}
+
+void channel_SetBase(CHANNEL *channel, uint32_t value) {
+	channel->base = value & 0xffffff;
+}
 
 uint32_t channel_GetControl(CHANNEL *channel) {
 	uint32_t r = 0;
@@ -72,6 +105,9 @@ void channel_Reset(CHANNEL *channel) {
 	channel->chop_dma_s = 0;
 	channel->chop_cpu_s = 0;
 	channel->dummy = 0;
+	channel->base = 0;
+	channel->block_count = 0;
+	channel->block_size = 0;
 }
 
 CHANNEL *channel_Create() {
