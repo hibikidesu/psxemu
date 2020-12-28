@@ -184,8 +184,7 @@ uint32_t load_Int(CPU *cpu, uint32_t offset) {
 
 		// Direct Memory Access
 		case DMA_OFFSET ... DMA_OFFSET + DMA_SIZE:
-			log_Debug("Unimplemented DMA Read");
-			value = 0x0;
+			value = dma_ReadRegister(cpu->devices->dma, new_offset);
 			break;
 
 		// GPU
@@ -322,7 +321,7 @@ void store_Int(CPU *cpu, uint32_t offset, uint32_t value) {
 
 		// Direct Memory Access
 		case DMA_OFFSET ... DMA_OFFSET + DMA_SIZE - 1:
-			log_Debug("Unimplemented DMA Write");
+			dma_SetRegister(cpu->devices->dma, new_offset, value);
 			break;
 
 		// GPU

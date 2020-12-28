@@ -2,22 +2,42 @@
 #define PSX_DMA
 
 #include <stdint.h>
+#include <stdbool.h>
+#include "channel.h"
 
+// Memory Offsets
 #define DMA_OFFSET 0x1f801080
 #define DMA_SIZE 0x80
 
+// Register Loads/Stores
+#define DMA_CONTROL 0x70
+#define DMA_INTERRUPT 0x74
+
 typedef struct {
-	uint8_t MDECin[0x10];
-	uint8_t MDECout[0x10];
-	uint8_t GPU[0x10];
-	uint8_t CDROM[0x10];
-	uint8_t SPU[0x10];
-	uint8_t PIO[0x10];
-	uint8_t OTC[0x10];
+	// 7 Channels
+	CHANNEL *MDECin;
+	CHANNEL *MDECout;
+	CHANNEL *GPU;
+	CHANNEL *CDROM;
+	CHANNEL *SPU;
+	CHANNEL *PIO;
+	CHANNEL *OTC;
+	// Registers
 	uint32_t CONTROL;
-	uint32_t INTERRUPT;
+	// Interrupt
+	bool irq_enable;
+	uint8_t irq_channel_enable;
+	uint8_t irq_channel_flags;
+	bool irq_force;
+	uint8_t irq_dummy;
 } DMA;
 
+CHANNEL *dma_GetChannelFromIndex(DMA *dma, uint8_t channel);
+bool dma_GetIRQ(DMA *dma);
+uint32_t dma_GetInterrupt(DMA *dma);
+void dma_SetInterrupt(DMA *dma, uint32_t value);
+void dma_SetRegister(DMA *dma, uint32_t offset, uint32_t value);
+uint32_t dma_ReadRegister(DMA *dma, uint32_t offset);
 void dma_Reset(DMA *dma);
 DMA *dma_Create();
 void dma_Destroy(DMA *dma);
