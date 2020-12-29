@@ -6,19 +6,26 @@
 #include "commandbuffer.h"
 
 // GP0 Instructions
-#define GP0_NOP				0x00
-#define GP0_CLEARCACHE		0x01
-#define GP0_QUADMONOOPAQUE	0x28
-#define GP0_IMAGE_LOAD		0xA0
-#define GP0_DRAWMODE		0xE1
-#define GP0_SETTEXWIN		0xE2
-#define GP0_SETDRAWTL		0xE3
-#define GP0_SETDRAWBR		0xE4
-#define GP0_SETDRAWOFFSET	0xE5
-#define GP0_MASKBITSETTING	0xE6
+#define GP0_NOP					0x00
+#define GP0_CLEARCACHE			0x01
+#define GP0_QUADMONOOPAQUE		0x28
+#define GP0_QUADTEXBLENDOPAQUE	0x2c
+#define GP0_TRISHADEOPAQUE		0x30
+#define GP0_QUADSHADEOPAQUE		0x38
+#define GP0_IMAGE_LOAD			0xA0
+#define GP0_IMAGE_STORE			0xC0
+#define GP0_DRAWMODE			0xE1
+#define GP0_SETTEXWIN			0xE2
+#define GP0_SETDRAWTL			0xE3
+#define GP0_SETDRAWBR			0xE4
+#define GP0_SETDRAWOFFSET		0xE5
+#define GP0_MASKBITSETTING		0xE6
 
 // GP1 Instructions
 #define GP1_RESET			0x00
+#define GP1_RESETCMDBUFFER	0x01
+#define GP1_ACK_IRQ			0x02
+#define GP1_ENABLE_DISPLAY	0x03
 #define GP1_DMADIR			0x04
 #define GP1_VRAM_START		0x05
 #define GP1_DISPLAY_HRANGE	0x06

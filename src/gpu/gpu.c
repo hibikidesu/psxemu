@@ -217,6 +217,28 @@ void gp0_ImageLoad(GPU *gpu) {
 	gpu->gp0_mode = ImageLoad;
 }
 
+void gp0_ImageStore(GPU *gpu) {
+	// Get image resolution
+	uint32_t res = commandBuffer_GetValue(gpu->gp0_cmd, 2);
+
+	uint32_t width = res & 0xffff;
+	uint32_t height = res >> 16;
+
+	log_Warn("Unhandled ImageStore w: %u h: %u", width, height);
+}
+
+void gp0_QuadShadeOpaque(GPU *gpu) {
+	log_Warn("Unhandled QuadShadeOpaque");
+}
+
+void gp0_TriangleShadeOpaque(GPU *gpu) {
+	log_Warn("Unhandled TriangleShadeOpaque");
+}
+
+void gp0_QuadTextureBlendOpaque(GPU *gpu) {
+	log_Warn("Unhandled QuadTextureBlendOpaque");
+}
+
 void gp0_RunFunction(GPU *gpu) {
 	switch (gpu->gp0_ins) {
 		case GP0_NOP:
@@ -247,6 +269,18 @@ void gp0_RunFunction(GPU *gpu) {
 			break;
 		case GP0_IMAGE_LOAD:
 			gp0_ImageLoad(gpu);
+			break;
+		case GP0_IMAGE_STORE:
+			gp0_ImageStore(gpu);
+			break;
+		case GP0_QUADSHADEOPAQUE:
+			gp0_QuadShadeOpaque(gpu);
+			break;
+		case GP0_TRISHADEOPAQUE:
+			gp0_TriangleShadeOpaque(gpu);
+			break;
+		case GP0_QUADTEXBLENDOPAQUE:
+			gp0_QuadTextureBlendOpaque(gpu);
 			break;
 		default:
 			log_Error("Unknown GP0 opcode 0x%X", gpu->instruction);
@@ -292,6 +326,18 @@ void gpu_HandleGP0(GPU *gpu, uint32_t value) {
 			case GP0_IMAGE_LOAD:
 				gpu->gp0_words_remaining = 3;
 				break;
+			case GP0_IMAGE_STORE:
+				gpu->gp0_words_remaining = 3;
+				break;
+			case GP0_QUADSHADEOPAQUE:
+				gpu->gp0_words_remaining = 8;
+				break;
+			case GP0_TRISHADEOPAQUE:
+				gpu->gp0_words_remaining = 6;
+				break;
+			case GP0_QUADTEXBLENDOPAQUE:
+				gpu->gp0_words_remaining = 9;
+				break;
 			default:
 				log_Error("Unknown GP0 opcode 0x%X, 0x%X", gpu->instruction, value);
 				exit(1);
@@ -310,7 +356,6 @@ void gpu_HandleGP0(GPU *gpu, uint32_t value) {
 			break;
 		// Copy to VRAM
 		case ImageLoad:
-			log_Debug("imageload");
 			if (gpu->gp0_words_remaining == 0) {
 				// Load DONE
 				gpu->gp0_mode = Command;
@@ -390,6 +435,21 @@ void gp1_DisplayVerticalRange(GPU *gpu) {
 	gpu->display_line_end = (uint16_t)((gpu->instruction >> 10) & 0x3ff);
 }
 
+void gp1_DisplayEnable(GPU *gpu) {
+	gpu->display_disabled = (gpu->instruction & 1) != 0;
+}
+
+void gp1_AcknowledgeIRQ(GPU *gpu) {
+	gpu->interrupt = false;
+}
+
+void gp1_ResetCommandBuffer(GPU *gpu) {
+	commandBuffer_Clear(gpu->gp0_cmd);
+	gpu->gp0_words_remaining = 0;
+	gpu->gp0_mode = Command;
+	// clear fifo when implemented
+}
+
 void gpu_HandleGP1(GPU *gpu, uint32_t value) {
 	gpu->instruction = (value >> 24) & 0xff;
 	switch (gpu->instruction) {
@@ -410,6 +470,15 @@ void gpu_HandleGP1(GPU *gpu, uint32_t value) {
 			break;
 		case GP1_DISPLAY_VRANGE:
 			gp1_DisplayVerticalRange(gpu);
+			break;
+		case GP1_ENABLE_DISPLAY:
+			gp1_DisplayEnable(gpu);
+			break;
+		case GP1_ACK_IRQ:
+			gp1_AcknowledgeIRQ(gpu);
+			break;
+		case GP1_RESETCMDBUFFER:
+			gp1_ResetCommandBuffer(gpu);
 			break;
 		default:
 			log_Error("Unknown GP1 opcode 0x%X, 0x%X", gpu->instruction, value);
