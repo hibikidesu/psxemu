@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include "gpu.h"
+#include "commandbuffer.h"
 #include "../utils/logger.h"
 
 uint32_t gpu_Load32(GPU *gpu, uint32_t offset) {
@@ -118,11 +119,14 @@ GPU *gpu_Create() {
 	GPU *gpu = malloc(sizeof(GPU));
 	gpu->field = fieldTop;	
 	gpu->instruction = 0;
+	gpu->gp0_cmd = commandBuffer_Create();
+	gpu->gp0_cmd_remaining = 0;
 	gpu_Reset(gpu);
 	return gpu;
 }
 
 void gpu_Destroy(GPU *gpu) {
+	commandBuffer_Destroy(gpu->gp0_cmd);
 	free(gpu);
 }
 
@@ -191,6 +195,7 @@ void gp0_MaskBitSetting(GPU *gpu) {
 
 void gpu_HandleGP0(GPU *gpu, uint32_t value) {
 	gpu->instruction = (value >> 24) & 0xff;
+	// todo add commandbuffer
 	switch (gpu->instruction) {
 		case GP0_NOP:
 			break;
