@@ -74,7 +74,7 @@ void dma_SetInterrupt(DMA *dma, uint32_t value) {
 
 	// Reset if 1
 	uint8_t ack = (uint8_t)((value >> 24) & 0x3f);
-	dma->irq_channel_flags &= !ack;
+	dma->irq_channel_flags &= ~ack;
 }
 
 uint32_t dma_ReadRegister(DMA *dma, uint32_t offset) {

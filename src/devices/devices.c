@@ -108,7 +108,8 @@ void devices_RunDMABlock(DEVICES *devices, CHANNEL *channel, uint8_t index) {
 				switch (index) {
 					// GPU
 					case 2:
-						log_Debug("GPU Data 0x%08X", src_word);
+						// log_Debug("RAM->GPU 0x%08X", src_word);
+						gpu_HandleGP0(devices->gpu, src_word);
 						break;
 					default:
 						log_Error("Unimplemented channel block todevice %u", index);

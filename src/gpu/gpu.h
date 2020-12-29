@@ -7,6 +7,9 @@
 
 // GP0 Instructions
 #define GP0_NOP				0x00
+#define GP0_CLEARCACHE		0x01
+#define GP0_QUADMONOOPAQUE	0x28
+#define GP0_IMAGE_LOAD		0xA0
 #define GP0_DRAWMODE		0xE1
 #define GP0_SETTEXWIN		0xE2
 #define GP0_SETDRAWTL		0xE3
@@ -52,6 +55,12 @@ typedef enum {
 	DirCPUtoGP0 = 2,
 	DirVRAMtoCPU = 3
 } GPUDMADirection;
+typedef enum {
+	// Handling commands
+	Command,
+	// Loading images into VRAM
+	ImageLoad
+} GP0Mode;
 
 typedef struct {
 	// Texture page X
@@ -130,7 +139,10 @@ typedef struct {
 	// Contains current GP0 command
 	CommandBuffer *gp0_cmd;
 	// Remaining words for current GP0 command
-	uint32_t gp0_cmd_remaining;
+	uint32_t gp0_words_remaining;
+	// Instruction to run
+	uint32_t gp0_ins;
+	GP0Mode gp0_mode;
 } GPU;
 
 uint32_t gpu_Load32(GPU *gpu, uint32_t offset);

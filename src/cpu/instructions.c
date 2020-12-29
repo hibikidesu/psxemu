@@ -199,9 +199,7 @@ uint32_t load_Int(CPU *cpu, uint32_t offset) {
 					break;
 				// GPUSTAT
 				case 4:
-					// Bit 26 = Ready to recieve command word
-					// Bit 27 = Ready to send VRAM to CPU
-					value = 0x1c000000;
+					value = gpu_GetStatus(cpu->devices->gpu);
 					break;
 				default:
 					log_Error("%s Unknown GPU offset 0x%X", __FUNCTION__, new_offset - GPU_OFFSET);
@@ -863,7 +861,7 @@ void instruction_Rfe(CPU *cpu) {
 	}
 
 	uint32_t mode = cpu->SR & 0x3f;
-	cpu->SR &= !0x3f;
+	cpu->SR &= ~0x3f;
 	cpu->SR |= mode >> 2;
 }
 
@@ -910,7 +908,7 @@ void instruction_Nor(CPU *cpu) {
 	uint32_t d = getD(cpu->this_instruction);
 	uint32_t s = getS(cpu->this_instruction);
 	uint32_t t = getT(cpu->this_instruction);
-	uint32_t v = !(cpu_GetRegister(cpu, s) | cpu_GetRegister(cpu, t));
+	uint32_t v = ~(cpu_GetRegister(cpu, s) | cpu_GetRegister(cpu, t));
 
 	cpu_SetRegister(cpu, d, v);
 }
@@ -1016,7 +1014,7 @@ void instruction_Lwl(CPU *cpu) {
 	uint32_t cur_v = cpu->out_reg[t];
 
 	// Load aligned word with aligned address
-	uint32_t aligned_word = load_Int(cpu, addr & !3);
+	uint32_t aligned_word = load_Int(cpu, addr & ~3);
 	uint32_t v;
 
 	// Get most sig bits depending on alignment
@@ -1054,7 +1052,7 @@ void instruction_Lwr(CPU *cpu) {
 	uint32_t cur_v = cpu->out_reg[t];
 
 	// Load aligned word with aligned address
-	uint32_t aligned_word = load_Int(cpu, addr & !3);
+	uint32_t aligned_word = load_Int(cpu, addr & ~3);
 	uint32_t v;
 
 	// Get least sig bits depending on alignment
@@ -1090,7 +1088,7 @@ void instruction_Swl(CPU *cpu) {
 	uint32_t v = cpu_GetRegister(cpu, t);
 
 	// Load memory from aligned address
-	uint32_t cur_mem = load_Int(cpu, addr & !3);
+	uint32_t cur_mem = load_Int(cpu, addr & ~3);
 	uint32_t mem;
 
 	// From most sig bits
@@ -1114,7 +1112,7 @@ void instruction_Swl(CPU *cpu) {
 	}
 
 	// Write memory to aligned addr
-	store_Int(cpu, addr & !3, mem);
+	store_Int(cpu, addr & ~3, mem);
 }
 
 // Store Word Right
@@ -1126,7 +1124,7 @@ void instruction_Swr(CPU *cpu) {
 	uint32_t v = cpu_GetRegister(cpu, t);
 
 	// Load memory from aligned address
-	uint32_t cur_mem = load_Int(cpu, addr & !3);
+	uint32_t cur_mem = load_Int(cpu, addr & ~3);
 	uint32_t mem;
 
 	// From least sig bits
@@ -1150,7 +1148,7 @@ void instruction_Swr(CPU *cpu) {
 	}
 
 	// Write memory to aligned addr
-	store_Int(cpu, addr & !3, mem);
+	store_Int(cpu, addr & ~3, mem);
 }
 
 //

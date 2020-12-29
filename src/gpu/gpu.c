@@ -23,7 +23,7 @@ uint32_t gpu_GetStatus(GPU *gpu) {
 	// Bit 14 not supported
 	r |= ((uint32_t)gpu->texture_disabled) << 15;
 	r |= gpu_IntoStatus(gpu);
-	r |= ((uint32_t)gpu->vres) << 19;
+	// r |= ((uint32_t)gpu->vres) << 19;
 	r |= ((uint32_t)gpu->vmode) << 20;
 	r |= ((uint32_t)gpu->display_depth) << 21;
 	r |= ((uint32_t)gpu->interlaced) << 22;
@@ -120,7 +120,8 @@ GPU *gpu_Create() {
 	gpu->field = fieldTop;	
 	gpu->instruction = 0;
 	gpu->gp0_cmd = commandBuffer_Create();
-	gpu->gp0_cmd_remaining = 0;
+	gpu->gp0_words_remaining = 0;
+	gpu->gp0_mode = Command;
 	gpu_Reset(gpu);
 	return gpu;
 }
@@ -193,10 +194,31 @@ void gp0_MaskBitSetting(GPU *gpu) {
 	gpu->preserve_masked_pixels = (gpu->instruction & 2) != 0;
 }
 
-void gpu_HandleGP0(GPU *gpu, uint32_t value) {
-	gpu->instruction = (value >> 24) & 0xff;
-	// todo add commandbuffer
-	switch (gpu->instruction) {
+void gp0_QuadMonoOpaque(GPU *gpu) {
+	log_Debug("DRAW QUAD");
+}
+
+void gp0_ClearCache(GPU *gpu) {
+	// todo
+}
+
+void gp0_ImageLoad(GPU *gpu) {
+	// Get image resolution
+	uint32_t res = commandBuffer_GetValue(gpu->gp0_cmd, 2);
+
+	uint32_t width = res & 0xffff;
+	uint32_t height = res >> 16;
+
+	// Round pixels
+	uint32_t size = ((width * height) + 1) & ~1;
+	log_Debug("Image Size = 0x%08X", size);
+
+	gpu->gp0_words_remaining = size / 2;
+	gpu->gp0_mode = ImageLoad;
+}
+
+void gp0_RunFunction(GPU *gpu) {
+	switch (gpu->gp0_ins) {
 		case GP0_NOP:
 			break;
 		case GP0_DRAWMODE:
@@ -217,9 +239,84 @@ void gpu_HandleGP0(GPU *gpu, uint32_t value) {
 		case GP0_MASKBITSETTING:
 			gp0_MaskBitSetting(gpu);
 			break;
+		case GP0_QUADMONOOPAQUE:
+			gp0_QuadMonoOpaque(gpu);
+			break;
+		case GP0_CLEARCACHE:
+			gp0_ClearCache(gpu);
+			break;
+		case GP0_IMAGE_LOAD:
+			gp0_ImageLoad(gpu);
+			break;
 		default:
-			log_Error("Unknown GP0 opcode 0x%X, 0x%X", gpu->instruction, value);
+			log_Error("Unknown GP0 opcode 0x%X", gpu->instruction);
 			exit(1);
+			break;
+	}
+}
+
+void gpu_HandleGP0(GPU *gpu, uint32_t value) {
+	gpu->instruction = (value >> 24) & 0xff;
+	if (gpu->gp0_words_remaining == 0) {
+		commandBuffer_Clear(gpu->gp0_cmd);
+		gpu->gp0_ins = gpu->instruction;
+		// Set cmd remaining count
+		switch (gpu->instruction) {
+			case GP0_NOP:
+				gpu->gp0_words_remaining = 1;
+				break;
+			case GP0_DRAWMODE:
+				gpu->gp0_words_remaining = 1;
+				break;
+			case GP0_SETDRAWTL:
+				gpu->gp0_words_remaining = 1;
+				break;
+			case GP0_SETDRAWBR:
+				gpu->gp0_words_remaining = 1;
+				break;
+			case GP0_SETDRAWOFFSET:
+				gpu->gp0_words_remaining = 1;
+				break;
+			case GP0_SETTEXWIN:
+				gpu->gp0_words_remaining = 1;
+				break;
+			case GP0_MASKBITSETTING:
+				gpu->gp0_words_remaining = 1;
+				break;
+			case GP0_QUADMONOOPAQUE:
+				gpu->gp0_words_remaining = 5;
+				break;
+			case GP0_CLEARCACHE:
+				gpu->gp0_words_remaining = 1;
+				break;
+			case GP0_IMAGE_LOAD:
+				gpu->gp0_words_remaining = 3;
+				break;
+			default:
+				log_Error("Unknown GP0 opcode 0x%X, 0x%X", gpu->instruction, value);
+				exit(1);
+				break;
+		}
+	}
+	gpu->gp0_words_remaining -= 1;
+
+	switch (gpu->gp0_mode) {
+		// Execute Command
+		case Command:
+			commandBuffer_Store(gpu->gp0_cmd, value);
+			if (gpu->gp0_words_remaining == 0) {
+				gp0_RunFunction(gpu);
+			}
+			break;
+		// Copy to VRAM
+		case ImageLoad:
+			log_Debug("imageload");
+			if (gpu->gp0_words_remaining == 0) {
+				// Load DONE
+				gpu->gp0_mode = Command;
+			}
+			break;
+		default:
 			break;
 	}
 }
@@ -234,21 +331,21 @@ void gp1_DisplayMode(GPU *gpu) {
 	gpu->hres = gpu_CreateHRES(hr1, hr2);
 
 	if ((gpu->instruction & 0x4) != 0) {
-		gpu->vres = Y480Lines;
-	} else {
 		gpu->vres = Y240Lines;
+	} else {
+		gpu->vres = Y480Lines;
 	}
 
 	if ((gpu->instruction & 0x8) != 0) {
-		gpu->vmode = PAL;
-	} else {
 		gpu->vmode = NTSC;
+	} else {
+		gpu->vmode = PAL;
 	}
 
 	if ((gpu->instruction & 0x10) != 0) {
-		gpu->display_depth = D15Bits;
-	} else {
 		gpu->display_depth = D24Bits;
+	} else {
+		gpu->display_depth = D15Bits;
 	}
 
 	gpu->interlaced = (gpu->instruction & 0x20) != 0;
