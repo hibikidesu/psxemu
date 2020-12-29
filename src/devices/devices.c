@@ -6,7 +6,50 @@
 #include "channel.h"
 #include "../utils/logger.h"
 
-// Block copy to next target
+void devices_RunDMALinkedList(DEVICES *devices, CHANNEL *channel, uint8_t index) {
+	uint32_t addr = 0;
+	uint32_t header = 0;
+	uint32_t size = 0;
+	uint32_t command = 0;
+
+	// Check if supported mode
+	if (channel->direction == toRam) {
+		log_Error("Invalid chanel direction toRam for linkedList.");
+		exit(1);
+	}
+
+	// Linked list only allows the gpu channel?
+	if (index != 2) {
+		log_Error("Attempted to run linked lists on channel %u", index);
+		exit(1);
+	}
+
+	addr = channel_GetBase(channel) & 0x1ffffc;
+
+	while (1) {
+		// High byte contains word count of packet
+		header = ram_LoadInt(devices->ram, addr);
+		size = header >> 24;
+
+		while (size > 0) {
+			addr = (addr + 4) & 0x1ffffc;
+			command = ram_LoadInt(devices->ram, addr);
+			log_Debug("Command 0x%08X", command);
+			size -= 1;
+		}
+
+		// Hardware checks size instead of 0xffffff?
+		if ((header & 0x800000) != 0) {
+			break;
+		}
+
+		addr = header & 0x1ffffc;
+	}
+
+	channel_SetDone(channel);
+	log_Debug("Channel %u done", index);
+}
+
 void devices_RunDMABlock(DEVICES *devices, CHANNEL *channel, uint8_t index) {
 	uint32_t incr;
 	uint32_t addr;
@@ -23,12 +66,14 @@ void devices_RunDMABlock(DEVICES *devices, CHANNEL *channel, uint8_t index) {
 
 	// Get Address
 	addr = channel_GetBase(channel);
-	
+
 	// Get transfer size
 	if ((size = channel_GetTransferSize(channel)) == 0) {
 		log_Error("Failed to find channel transfer size");
 		exit(1);
 	}
+
+	log_Debug("Channel %u Base Address: 0x%08X, Block Size: %u", index, addr, size);
 
 	// not again notlikebep
 	while (size > 0) {
@@ -50,16 +95,25 @@ void devices_RunDMABlock(DEVICES *devices, CHANNEL *channel, uint8_t index) {
 						}
 						break;
 					default:
-						log_Error("Unimplemented channel block toram %d", index);
+						log_Error("Unimplemented channel block toram %u", index);
 						exit(1);
 						break;
 				}
 				ram_StoreInt(devices->ram, cur_addr, src_word);
-				log_Debug("Storing 0x%X in 0x%X from channel %d", src_word, cur_addr, index);
+				// log_Debug("Storing 0x%X in 0x%X from channel %d", src_word, cur_addr, index);
 				break;
 			case toDevice:
-				log_Error("toDevice block unimplemented");
-				exit(1);
+				src_word = ram_LoadInt(devices->ram, cur_addr);
+				switch (index) {
+					// GPU
+					case 2:
+						log_Debug("GPU Data 0x%08X", src_word);
+						break;
+					default:
+						log_Error("Unimplemented channel block todevice %u", index);
+						exit(1);
+						break;
+				}
 				break;
 			default:
 				break;
@@ -71,13 +125,13 @@ void devices_RunDMABlock(DEVICES *devices, CHANNEL *channel, uint8_t index) {
 	}
 
 	channel_SetDone(channel);
+	log_Debug("Channel %u done", index);
 }
 
 void devices_RunDMA(DEVICES *devices, CHANNEL *channel, uint8_t index) {
 	switch (channel->sync) {
 		case linkedList:
-			log_Error("%s linked lists not supported", __FUNCTION__);
-			exit(1);
+			devices_RunDMALinkedList(devices, channel, index);
 			break;
 		default:
 			devices_RunDMABlock(devices, channel, index);
@@ -90,6 +144,7 @@ void devices_DMASetRegister(DEVICES *devices, uint32_t offset, uint32_t value) {
 	uint32_t major = (offset & 0x70) >> 4;
 	uint32_t minor = offset & 0xf;
 	CHANNEL *channel = NULL;
+	log_Debug("DMA Set Register 0x%08X: 0x%08X", offset, value);
 
 	// another notlikebep
 	switch (major) {
@@ -115,7 +170,9 @@ void devices_DMASetRegister(DEVICES *devices, uint32_t offset, uint32_t value) {
 			}
 			// Do dma if channel is active.
 			if (channel_IsActive(channel)) {
+				log_Debug("Running Channel 0x%X", major);
 				devices_RunDMA(devices, channel, major);
+				log_Debug("Done 0x%X", major);
 			}
 			break;
 

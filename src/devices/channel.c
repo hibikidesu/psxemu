@@ -21,9 +21,6 @@ uint32_t channel_GetTransferSize(CHANNEL *channel) {
 		case request:
 			size = bc * bs;
 			break;
-		case linkedList:
-			size = 0xffffff;
-			break;
 		default:
 			break;
 	}

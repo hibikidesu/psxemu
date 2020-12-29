@@ -11,6 +11,7 @@ typedef struct {
 	DMA *dma;
 } DEVICES;
 
+void devices_RunDMALinkedList(DEVICES *devices, CHANNEL *channel, uint8_t index);
 void devices_RunDMABlock(DEVICES *devices, CHANNEL *channel, uint8_t index);
 void devices_RunDMA(DEVICES *devices, CHANNEL *channel, uint8_t index);
 void devices_DMASetRegister(DEVICES *devices, uint32_t offset, uint32_t value);

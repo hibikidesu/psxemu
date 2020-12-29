@@ -183,7 +183,7 @@ uint32_t load_Int(CPU *cpu, uint32_t offset) {
 			break;
 
 		// Direct Memory Access
-		case DMA_OFFSET ... DMA_OFFSET + DMA_SIZE:
+		case DMA_OFFSET ... DMA_OFFSET + DMA_SIZE - 1:
 			value = dma_ReadRegister(cpu->devices->dma, new_offset - DMA_OFFSET);
 			break;
 
@@ -191,13 +191,22 @@ uint32_t load_Int(CPU *cpu, uint32_t offset) {
 		case GPU_OFFSET ... GPU_OFFSET + GPU_SIZE:
 			// log_Debug("Unimplemented GPU Read");
 			switch (new_offset - GPU_OFFSET) {
+				// GPUSTAT
 				case 4:
-					value = 0x10000000;
+					// Bit 26 = Ready to recieve command word
+					// Bit 27 = Ready to send VRAM to CPU
+					value = 0x1c000000;
 					break;
 				default:
 					value = 0x0;
 					break;
 			}
+			break;
+
+		// TIMERS
+		case TIMERS_OFFSET ... TIMERS_OFFSET + TIMERS_SIZE:
+			log_Debug("Unimplemented timer load");
+			value = 0x0;
 			break;
 
 		default:
