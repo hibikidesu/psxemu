@@ -193,6 +193,10 @@ uint32_t load_Int(CPU *cpu, uint32_t offset) {
 		case GPU_OFFSET ... GPU_OFFSET + GPU_SIZE:
 			// log_Debug("Unimplemented GPU Read");
 			switch (new_offset - GPU_OFFSET) {
+				// GPUREAD
+				case 0:
+					value = gpu_Load32(cpu->devices->gpu, new_offset);
+					break;
 				// GPUSTAT
 				case 4:
 					// Bit 26 = Ready to recieve command word
@@ -200,7 +204,8 @@ uint32_t load_Int(CPU *cpu, uint32_t offset) {
 					value = 0x1c000000;
 					break;
 				default:
-					value = 0x0;
+					log_Error("%s Unknown GPU offset 0x%X", __FUNCTION__, new_offset - GPU_OFFSET);
+					exit(1);
 					break;
 			}
 			break;

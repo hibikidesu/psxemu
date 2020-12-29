@@ -3,6 +3,11 @@
 #include "gpu.h"
 #include "../utils/logger.h"
 
+uint32_t gpu_Load32(GPU *gpu, uint32_t offset) {
+	log_Debug("GPU Read at 0x%X", offset);
+	return 0;
+}
+
 uint32_t gpu_GetStatus(GPU *gpu) {
 	uint32_t r = 0;
 	r |= ((uint32_t)gpu->page_base_x) << 0;
@@ -153,6 +158,37 @@ void gp0_drawMode(GPU *gpu) {
 	gpu->rectangle_t_y_flip = ((gpu->instruction >> 13) & 1) != 0;
 }
 
+void gp0_SetDrawTL(GPU *gpu) {
+	gpu->drawing_area_top = (uint16_t)((gpu->instruction >> 10) & 0x3ff);
+	gpu->drawing_area_left = (uint16_t)(gpu->instruction &0x3ff);
+}
+
+void gp0_SetDrawBR(GPU *gpu) {
+	gpu->drawing_area_bottom = (uint16_t)((gpu->instruction >> 10) & 0x3ff);
+	gpu->drawing_area_right = (uint16_t)(gpu->instruction & 0x3ff);
+}
+
+void gp0_SetDrawingOffset(GPU *gpu) {
+	uint16_t x = (uint16_t)(gpu->instruction & 0x7ff);
+	uint16_t y = (uint16_t)((gpu->instruction >> 11) & 0x7ff);
+
+	// Shift to force sign extension
+	gpu->drawing_x_offset = ((int16_t)(x << 5)) >> 5;
+	gpu->drawing_y_offset = ((int16_t)(y << 5)) >> 5;
+}
+
+void gp0_SetTextureWindow(GPU *gpu) {
+	gpu->texture_window_x_mask = (uint8_t)(gpu->instruction & 0x1f);
+	gpu->texture_window_y_mask = (uint8_t)((gpu->instruction >> 5) & 0x1f);
+	gpu->texture_window_x_offset = (uint8_t)((gpu->instruction >> 10) & 0x1f);
+	gpu->texture_window_y_offset = (uint8_t)((gpu->instruction >> 15) & 0x1f);
+}
+
+void gp0_MaskBitSetting(GPU *gpu) {
+	gpu->force_set_mask_bit = (gpu->instruction & 1) != 0;
+	gpu->preserve_masked_pixels = (gpu->instruction & 2) != 0;
+}
+
 void gpu_HandleGP0(GPU *gpu, uint32_t value) {
 	gpu->instruction = (value >> 24) & 0xff;
 	switch (gpu->instruction) {
@@ -160,6 +196,21 @@ void gpu_HandleGP0(GPU *gpu, uint32_t value) {
 			break;
 		case GP0_DRAWMODE:
 			gp0_drawMode(gpu);
+			break;
+		case GP0_SETDRAWTL:
+			gp0_SetDrawTL(gpu);
+			break;
+		case GP0_SETDRAWBR:
+			gp0_SetDrawBR(gpu);
+			break;
+		case GP0_SETDRAWOFFSET:
+			gp0_SetDrawingOffset(gpu);
+			break;
+		case GP0_SETTEXWIN:
+			gp0_SetTextureWindow(gpu);
+			break;
+		case GP0_MASKBITSETTING:
+			gp0_MaskBitSetting(gpu);
 			break;
 		default:
 			log_Error("Unknown GP0 opcode 0x%X, 0x%X", gpu->instruction, value);
@@ -172,9 +223,92 @@ void gpu_HandleGP0(GPU *gpu, uint32_t value) {
 // GP1
 //
 
+void gp1_DisplayMode(GPU *gpu) {
+	uint8_t hr1 = (uint8_t)(gpu->instruction & 3);
+	uint8_t hr2 = (uint8_t)((gpu->instruction >> 6) & 1);
+	gpu->hres = gpu_CreateHRES(hr1, hr2);
+
+	if ((gpu->instruction & 0x4) != 0) {
+		gpu->vres = Y480Lines;
+	} else {
+		gpu->vres = Y240Lines;
+	}
+
+	if ((gpu->instruction & 0x8) != 0) {
+		gpu->vmode = PAL;
+	} else {
+		gpu->vmode = NTSC;
+	}
+
+	if ((gpu->instruction & 0x10) != 0) {
+		gpu->display_depth = D15Bits;
+	} else {
+		gpu->display_depth = D24Bits;
+	}
+
+	gpu->interlaced = (gpu->instruction & 0x20) != 0;
+	if ((gpu->instruction & 0x80) != 0) {
+		log_Error("Unsupported display mode 0x%X", gpu->instruction);
+		exit(1);
+	}
+}
+
+void gp1_DMADirectory(GPU *gpu) {
+	switch (gpu->instruction & 3) {
+		case 0:
+			gpu->dma_direction = DirOff;
+			break;
+		case 1:
+			gpu->dma_direction = DirFifo;
+			break;
+		case 2:
+			gpu->dma_direction = DirCPUtoGP0;
+			break;
+		case 3:
+			gpu->dma_direction = DirVRAMtoCPU;
+			break;
+		default:
+			log_Error("Unknown %s value 0x%X", __FUNCTION__, gpu->instruction);
+			break;
+	}
+}
+
+void gp1_DisplayVRAMStart(GPU *gpu) {
+	gpu->display_vram_x_start = (uint16_t)(gpu->instruction & 0x3fe);
+	gpu->display_vram_y_start = (uint16_t)((gpu->instruction >> 10) & 0x1ff);
+}
+
+void gp1_DisplayHorizontalRange(GPU *gpu) {
+	gpu->display_horiz_start = (uint16_t)(gpu->instruction & 0xfff);
+	gpu->display_horiz_end = (uint16_t)((gpu->instruction >> 12) & 0xfff);
+}
+
+void gp1_DisplayVerticalRange(GPU *gpu) {
+	gpu->display_line_start = (uint16_t)(gpu->instruction & 0x3ff);
+	gpu->display_line_end = (uint16_t)((gpu->instruction >> 10) & 0x3ff);
+}
+
 void gpu_HandleGP1(GPU *gpu, uint32_t value) {
 	gpu->instruction = (value >> 24) & 0xff;
 	switch (gpu->instruction) {
+		case GP1_RESET:
+			gpu_Reset(gpu);
+			break;
+		case GP1_DISPLAYMODE:
+			gp1_DisplayMode(gpu);
+			break;
+		case GP1_DMADIR:
+			gp1_DMADirectory(gpu);
+			break;
+		case GP1_VRAM_START:
+			gp1_DisplayVRAMStart(gpu);
+			break;
+		case GP1_DISPLAY_HRANGE:
+			gp1_DisplayHorizontalRange(gpu);
+			break;
+		case GP1_DISPLAY_VRANGE:
+			gp1_DisplayVerticalRange(gpu);
+			break;
 		default:
 			log_Error("Unknown GP1 opcode 0x%X, 0x%X", gpu->instruction, value);
 			exit(1);

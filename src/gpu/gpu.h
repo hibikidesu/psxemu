@@ -3,10 +3,24 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include "commandbuffer.h"
 
 // GP0 Instructions
-#define GP0_NOP			0x00
-#define GP0_DRAWMODE	0xE1
+#define GP0_NOP				0x00
+#define GP0_DRAWMODE		0xE1
+#define GP0_SETTEXWIN		0xE2
+#define GP0_SETDRAWTL		0xE3
+#define GP0_SETDRAWBR		0xE4
+#define GP0_SETDRAWOFFSET	0xE5
+#define GP0_MASKBITSETTING	0xE6
+
+// GP1 Instructions
+#define GP1_RESET			0x00
+#define GP1_DMADIR			0x04
+#define GP1_VRAM_START		0x05
+#define GP1_DISPLAY_HRANGE	0x06
+#define GP1_DISPLAY_VRANGE	0x07
+#define GP1_DISPLAYMODE		0x08
 
 // Bits per pixel
 typedef enum {
@@ -113,8 +127,13 @@ typedef struct {
 	uint16_t display_line_start;
 	// Display line last relative to VSYNC
 	uint16_t display_line_end;
+	// Contains current GP0 command
+	CommandBuffer *gp0_cmd;
+	// Remaining words for current GP0 command
+	uint32_t gp0_cmd_remaining;
 } GPU;
 
+uint32_t gpu_Load32(GPU *gpu, uint32_t offset);
 uint32_t gpu_GetStatus(GPU *gpu);
 uint32_t gpu_IntoStatus(GPU *gpu);
 uint32_t gpu_GetStatus(GPU *gpu);

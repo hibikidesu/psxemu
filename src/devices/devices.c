@@ -35,7 +35,7 @@ void devices_RunDMALinkedList(DEVICES *devices, CHANNEL *channel, uint8_t index)
 		while (size > 0) {
 			addr = (addr + 4) & 0x1ffffc;
 			command = ram_LoadInt(devices->ram, addr);
-			log_Debug("Command 0x%08X", command);
+			gpu_HandleGP0(devices->gpu, command);
 			size -= 1;
 		}
 
