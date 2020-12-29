@@ -7,6 +7,8 @@
 #include "../devices/ram.h"
 #include "../devices/bios.h"
 #include "../devices/dma.h"
+#include "../devices/expansion.h"
+#include "../gpu/gpu.h"
 #include "../utils/logger.h"
 
 //
@@ -100,7 +102,7 @@ uint8_t load_Byte(CPU *cpu, uint32_t offset) {
 		case EXPANSION_1_OFFSET ... EXPANSION_1_OFFSET + EXPANSION_1_SIZE:
 			// Unimplemented
 			value = 0xff;
-			log_Debug("Unimplemented Expansion 1 Read");
+			// log_Debug("Unimplemented Expansion 1 Read");
 			break;
 
 		// RAM
@@ -126,7 +128,7 @@ uint16_t load_Short(CPU *cpu, uint32_t offset) {
 	switch (new_offset) {
 		// SPU
 		case SPU_OFFSET ... SPU_OFFSET + SPU_SIZE:
-			log_Debug("Unimplemented SPU short read");
+			// log_Debug("Unimplemented SPU short read");
 			value = 0x0;
 			break;
 
@@ -138,7 +140,7 @@ uint16_t load_Short(CPU *cpu, uint32_t offset) {
 
 		// IRQ
 		case IRQ_CONTROL_OFFSET ... IRQ_CONTROL_OFFSET + IRQ_CONTROL_SIZE:
-			log_Debug("Unimplemented IRQ short read");
+			// log_Debug("Unimplemented IRQ short read");
 			value = 0x0;
 			break;
 
@@ -178,7 +180,7 @@ uint32_t load_Int(CPU *cpu, uint32_t offset) {
 
 		// Interrupt Control
 		case IRQ_CONTROL_OFFSET ... IRQ_CONTROL_OFFSET + IRQ_CONTROL_SIZE:
-			log_Debug("Unimplemented Interrupt Control Read");
+			// log_Debug("Unimplemented Interrupt Control Read");
 			value = 0x0;
 			break;
 
@@ -205,7 +207,7 @@ uint32_t load_Int(CPU *cpu, uint32_t offset) {
 
 		// TIMERS
 		case TIMERS_OFFSET ... TIMERS_OFFSET + TIMERS_SIZE:
-			log_Debug("Unimplemented timer load");
+			// log_Debug("Unimplemented timer load");
 			value = 0x0;
 			break;
 
@@ -225,9 +227,9 @@ void store_Byte(CPU *cpu, uint32_t offset, uint8_t value) {
 	uint32_t new_offset = mask_region(offset);
 
 	switch (new_offset) {
-		// Expansion 2 IO (Debugging?)
+		// Expansion 2
 		case EXPANSION_2_OFFSET ... EXPANSION_2_OFFSET + EXPANSION_2_SIZE:
-			log_Debug("Unimplemented store to SPU");
+			expansion2_StoreByte(cpu, new_offset, value);
 			break;
 
 		// RAM
@@ -257,12 +259,12 @@ void store_Short(CPU *cpu, uint32_t offset, uint16_t value) {
 	switch (new_offset) {
 		// SPU
 		case SPU_OFFSET ... SPU_OFFSET + SPU_SIZE:
-			log_Debug("Unimplemented store to SPU");
+			// log_Debug("Unimplemented store to SPU");
 			break;
 
 		// TIMERS
 		case TIMERS_OFFSET ... TIMERS_OFFSET + TIMERS_SIZE:
-			log_Debug("Unimplemented timer store");
+			// log_Debug("Unimplemented timer store");
 			break;
 
 		// RAM
@@ -272,7 +274,7 @@ void store_Short(CPU *cpu, uint32_t offset, uint16_t value) {
 
 		// IRQ
 		case IRQ_CONTROL_OFFSET ... IRQ_CONTROL_OFFSET + IRQ_CONTROL_SIZE:
-			log_Debug("Unimplemented IRQ short write");
+			// log_Debug("Unimplemented IRQ short write");
 			break;
 
 		default:
@@ -319,7 +321,7 @@ void store_Int(CPU *cpu, uint32_t offset, uint32_t value) {
 
 		// IRQ
 		case IRQ_CONTROL_OFFSET ... IRQ_CONTROL_OFFSET + IRQ_CONTROL_SIZE:
-			log_Debug("Unimplemented Interrupt Control Write");
+			// log_Debug("Unimplemented Interrupt Control Write");
 			break;
 
 		// RAM Area
@@ -335,12 +337,24 @@ void store_Int(CPU *cpu, uint32_t offset, uint32_t value) {
 
 		// GPU
 		case GPU_OFFSET ... GPU_OFFSET + GPU_SIZE:
-			log_Debug("Unimplemented GPU Write");
+			// Check write
+			switch (offset - GPU_OFFSET) {
+				case 0:
+					gpu_HandleGP0(cpu->devices->gpu, value);
+					break;
+				case 4:
+					gpu_HandleGP1(cpu->devices->gpu, value);
+					break;
+				default:
+					log_Error("%s Unknown GPU Offset 0x%X", __FUNCTION__, offset - GPU_OFFSET);
+					exit(1);
+					break;
+			}
 			break;
 
 		// TIMERS
 		case TIMERS_OFFSET ... TIMERS_OFFSET + TIMERS_SIZE:
-			log_Debug("Unimplemented timer store");
+			// log_Debug("Unimplemented timer store");
 			break;
 
 		default:

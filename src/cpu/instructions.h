@@ -19,10 +19,6 @@
 #define EXPANSION_1_OFFSET 0x1f000000
 #define EXPANSION_1_SIZE 512 * 1024
 
-// Expansion 2 (I/O Ports)
-#define EXPANSION_2_OFFSET 0x1F802000
-#define EXPANSION_2_SIZE 66
-
 // Interrupt Registers
 #define IRQ_CONTROL_OFFSET 0x1F801070
 #define IRQ_CONTROL_SIZE 8
