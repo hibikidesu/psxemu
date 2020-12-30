@@ -15,9 +15,9 @@ static GLuint vertex_shader;
 static GLuint fragment_shader;
 static GLuint program;
 static uint32_t nvertices = 0;
-static RendererColor *colorsBuffer[VERTEX_BUFFER_LEN];
+static RendererColor *colorsBuffer = NULL;
 static GLuint colorsObject;
-static RendererPositon *positionsBuffer[VERTEX_BUFFER_LEN];
+static RendererPosition *positionsBuffer = NULL;
 static GLuint positionsObject;
 static GLuint vertex_arrays;
 
@@ -57,11 +57,11 @@ void initBuffers() {
 	glBindBuffer(GL_ARRAY_BUFFER, positionsObject);
 
 	// Compute size
-	GLsizeiptr element_size = sizeof(RendererPositon);
+	GLsizeiptr element_size = sizeof(RendererPosition);
 	GLsizeiptr buffer_size = element_size * VERTEX_BUFFER_LEN;
 
 	glBufferStorage(GL_ARRAY_BUFFER, buffer_size, NULL, GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT);
-	*positionsBuffer = glMapBufferRange(GL_ARRAY_BUFFER, 0, buffer_size, GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT);
+	positionsBuffer = glMapBufferRange(GL_ARRAY_BUFFER, 0, buffer_size, GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT);
 
 	// Colors buffer
 	glGenBuffers(1, &colorsObject);
@@ -71,7 +71,7 @@ void initBuffers() {
 	buffer_size = element_size * VERTEX_BUFFER_LEN;
 
 	glBufferStorage(GL_ARRAY_BUFFER, buffer_size, NULL, GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT);
-	*colorsBuffer = glMapBufferRange(GL_ARRAY_BUFFER, 0, buffer_size, GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT);
+	colorsBuffer = glMapBufferRange(GL_ARRAY_BUFFER, 0, buffer_size, GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT);
 }
 
 uint64_t readFile(char *filePath, char **contents) {
@@ -114,7 +114,7 @@ GLuint renderer_LoadShader(char *path, GLenum type) {
 	return shader;
 }
 
-void renderer_DrawTriangleShade(RendererPositon **positions, RendererColor **colors) {
+void renderer_DrawTriangleShade(RendererPosition *positions, RendererColor *colors) {
 	if ((nvertices + 3) > VERTEX_BUFFER_LEN) {
 		log_Warn("Vertex Buffers Full, Forcing draw.");
 		renderer_Update();
@@ -125,22 +125,22 @@ void renderer_DrawTriangleShade(RendererPositon **positions, RendererColor **col
 		positionsBuffer[nvertices] = positions[i];
 		colorsBuffer[nvertices] = colors[i];
 		nvertices += 1;
-		log_Debug("ADD: X: %u Y: %u R: %u G: %u B: %u", positions[i]->x, positions[i]->y, colors[i]->r, colors[i]->g, colors[i]->b);
+		log_Debug("ADD: X: %u Y: %u R: %u G: %u B: %u", positions[i].x, positions[i].y, colors[i].r, colors[i].g, colors[i].b);
 	}
 }
 
-RendererColor *renderer_GetColorFromGP0(uint32_t value) {
-	RendererColor *color = malloc(sizeof(RendererColor));
-	color->r = (uint8_t)value;
-	color->g = (uint8_t)(value >> 8);
-	color->b = (uint8_t)(value >> 16);
+RendererColor renderer_GetColorFromGP0(uint32_t value) {
+	RendererColor color;
+	color.r = (uint8_t)value;
+	color.g = (uint8_t)(value >> 8);
+	color.b = (uint8_t)(value >> 16);
 	return color;
 }
 
-RendererPositon *renderer_GetPositionFromGP0(uint32_t value) {
-	RendererPositon *pos = malloc(sizeof(RendererPositon));
-	pos->x = (int16_t)value;
-	pos->y = (int16_t)(value >> 16);
+RendererPosition renderer_GetPositionFromGP0(uint32_t value) {
+	RendererPosition pos;
+	pos.x = (int16_t)value;
+	pos.y = (int16_t)(value >> 16);
 	return pos;
 }
 
@@ -161,9 +161,7 @@ void renderer_Update() {
 	// Clear and swap window
 	int i;
 	for (i = 0; i < nvertices; i++) {
-		log_Debug("BUFFER: X: %u Y: %u R: %u G: %u B: %u", positionsBuffer[i]->x, positionsBuffer[i]->y, colorsBuffer[i]->r, colorsBuffer[i]->g, colorsBuffer[i]->b);
-		free(positionsBuffer[i]);
-		free(colorsBuffer[i]);
+		log_Debug("BUFFER: X: %u Y: %u R: %u G: %u B: %u", positionsBuffer[i].x, positionsBuffer[i].y, colorsBuffer[i].r, colorsBuffer[i].g, colorsBuffer[i].b);
 	}
 	nvertices = 0;
 
@@ -230,6 +228,7 @@ void renderer_Init() {
 	glEnableVertexAttribArray(index);
 	glVertexAttribIPointer(index, 3, GL_UNSIGNED_BYTE, 0, NULL);
 
+	glViewport(0, 0, 1024, 512);
 	renderer_Update();
 }
 

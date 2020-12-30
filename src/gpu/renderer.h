@@ -10,7 +10,7 @@
 typedef struct {
 	GLshort x;
 	GLshort y;
-} RendererPositon;
+} RendererPosition;
 // Color
 typedef struct {
 	GLubyte r;
@@ -18,9 +18,9 @@ typedef struct {
 	GLubyte b;
 } RendererColor;
 
-void renderer_DrawTriangleShade(RendererPositon **positions, RendererColor **colors);
-RendererColor *renderer_GetColorFromGP0(uint32_t value);
-RendererPositon *renderer_GetPositionFromGP0(uint32_t value);
+void renderer_DrawTriangleShade(RendererPosition *positions, RendererColor *colors);
+RendererColor renderer_GetColorFromGP0(uint32_t value);
+RendererPosition renderer_GetPositionFromGP0(uint32_t value);
 void renderer_Update();
 void renderer_Init();
 void renderer_Destroy();
