@@ -2,6 +2,8 @@
 #include <stdbool.h>
 #include "gpu.h"
 #include "commandbuffer.h"
+#include "renderer.h"
+#include "../cpu/cpu.h"
 #include "../utils/logger.h"
 
 uint32_t gpu_Load32(GPU *gpu, uint32_t offset) {
@@ -123,10 +125,13 @@ GPU *gpu_Create() {
 	gpu->gp0_words_remaining = 0;
 	gpu->gp0_mode = Command;
 	gpu_Reset(gpu);
+	// Start renderer
+	renderer_Init();
 	return gpu;
 }
 
 void gpu_Destroy(GPU *gpu) {
+	renderer_Destroy();
 	commandBuffer_Destroy(gpu->gp0_cmd);
 	free(gpu);
 }
@@ -232,7 +237,25 @@ void gp0_QuadShadeOpaque(GPU *gpu) {
 }
 
 void gp0_TriangleShadeOpaque(GPU *gpu) {
-	log_Warn("Unhandled TriangleShadeOpaque");
+	int i;
+	RendererPositon *positions[3] = {
+		renderer_GetPositionFromGP0(commandBuffer_GetValue(gpu->gp0_cmd, 1)),
+		renderer_GetPositionFromGP0(commandBuffer_GetValue(gpu->gp0_cmd, 3)),
+		renderer_GetPositionFromGP0(commandBuffer_GetValue(gpu->gp0_cmd, 5))
+	};
+	RendererColor *colors[3] = {
+		renderer_GetColorFromGP0(commandBuffer_GetValue(gpu->gp0_cmd, 0)),
+		renderer_GetColorFromGP0(commandBuffer_GetValue(gpu->gp0_cmd, 2)),
+		renderer_GetColorFromGP0(commandBuffer_GetValue(gpu->gp0_cmd, 4))
+	};
+	renderer_DrawTriangle(positions, colors, 3);
+	renderer_Update();
+	
+	// Free
+	for (i = 0; i < 3; i++) {
+		free(positions[i]);
+		free(colors[i]);
+	}
 }
 
 void gp0_QuadTextureBlendOpaque(GPU *gpu) {

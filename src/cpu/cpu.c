@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
+#include <SDL2/SDL.h>
 #include "cpu.h"
 #include "instructions.h"
 #include "../devices/devices.h"
@@ -27,6 +28,19 @@ const static char *debugRegisterStrings[32] = {
 	"$fp",
 	"$ra"
 };
+
+void cpu_HandleEvents(CPU *cpu) {
+	SDL_Event event;
+	while (SDL_PollEvent(&event)) {
+		switch (event.type) {
+			case SDL_QUIT:
+				cpu->running = false;
+				break;
+			default:
+				break;
+		}
+	}
+}
 
 void cpu_DumpRegisters(CPU *cpu) {
 	int x, y, z;
