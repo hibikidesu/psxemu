@@ -2,20 +2,23 @@
 #define PSX_RENDERER
 
 #include <stdint.h>
+#include <GL/gl.h>
+
+#define VERTEX_BUFFER_LEN 64 * 1024
 
 // Pos in VRAM
 typedef struct {
-	uint16_t x;
-	uint16_t y;
+	GLshort x;
+	GLshort y;
 } RendererPositon;
 // Color
 typedef struct {
-	uint8_t r;
-	uint8_t g;
-	uint8_t b;
+	GLubyte r;
+	GLubyte g;
+	GLubyte b;
 } RendererColor;
 
-void renderer_DrawTriangle(RendererPositon **positions, RendererColor **colors, uint32_t size);
+void renderer_DrawTriangleShade(RendererPositon **positions, RendererColor **colors);
 RendererColor *renderer_GetColorFromGP0(uint32_t value);
 RendererPositon *renderer_GetPositionFromGP0(uint32_t value);
 void renderer_Update();

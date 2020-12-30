@@ -185,6 +185,7 @@ void gp0_SetDrawingOffset(GPU *gpu) {
 	// Shift to force sign extension
 	gpu->drawing_x_offset = ((int16_t)(x << 5)) >> 5;
 	gpu->drawing_y_offset = ((int16_t)(y << 5)) >> 5;
+	renderer_Update();
 }
 
 void gp0_SetTextureWindow(GPU *gpu) {
@@ -237,7 +238,6 @@ void gp0_QuadShadeOpaque(GPU *gpu) {
 }
 
 void gp0_TriangleShadeOpaque(GPU *gpu) {
-	int i;
 	RendererPositon *positions[3] = {
 		renderer_GetPositionFromGP0(commandBuffer_GetValue(gpu->gp0_cmd, 1)),
 		renderer_GetPositionFromGP0(commandBuffer_GetValue(gpu->gp0_cmd, 3)),
@@ -248,14 +248,7 @@ void gp0_TriangleShadeOpaque(GPU *gpu) {
 		renderer_GetColorFromGP0(commandBuffer_GetValue(gpu->gp0_cmd, 2)),
 		renderer_GetColorFromGP0(commandBuffer_GetValue(gpu->gp0_cmd, 4))
 	};
-	renderer_DrawTriangle(positions, colors, 3);
-	renderer_Update();
-	
-	// Free
-	for (i = 0; i < 3; i++) {
-		free(positions[i]);
-		free(colors[i]);
-	}
+	renderer_DrawTriangleShade(positions, colors);
 }
 
 void gp0_QuadTextureBlendOpaque(GPU *gpu) {
