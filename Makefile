@@ -13,7 +13,7 @@ else
 CFLAGS	+= -O2
 endif
 
-LIBS	:= $(shell pkg-config --libs sdl2 SDL2_ttf gl) -lSDL2_gpu
+LIBS	:= $(shell pkg-config --libs sdl2 gl) -lSDL2_gpu
 SRC		:= $(shell find src -name '*.c')
 OBJS	:= $(patsubst %.c,%.o,$(SRC))
 

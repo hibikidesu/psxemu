@@ -4,14 +4,10 @@
 #include <string.h>
 #include <math.h>
 #include <SDL2/SDL_gpu.h>
-#include <SDL2/SDL_ttf.h>
 #include "renderer.h"
 #include "../utils/logger.h"
-#include "microui.h"
 
 static GPU_Target *g_Screen = NULL;
-static mu_Context *mu_ctx = NULL;
-static TTF_Font *g_Font = NULL;
 
 void renderer_DrawQuad(RendererPosition *positions, RendererColor *colors) {
 	// vertices * (x, y + r, g, b, a)
@@ -123,49 +119,9 @@ RendererPosition renderer_GetPositionFromGP0(uint32_t value) {
 	return pos;
 }
 
-void process_frame() {
-	mu_begin(mu_ctx);
-	// style_window(mu_ctx);
-	// log_window(mu_ctx);
-	// test_window(mu_ctx);
-	mu_end(mu_ctx);
-}
-
-void draw_text(mu_Font font, const char *text, mu_Vec2 pos, mu_Color color) {
-	
-}
-
-void handle_commands() {
-	mu_Command *cmd = NULL;
-	while (mu_next_command(mu_ctx, &cmd)) {
-		switch (cmd->type) {
-			case MU_COMMAND_TEXT:
-				draw_text(cmd->text.font, cmd->text.str, cmd->text.pos, cmd->text.color);
-				break;
-			default:
-				break;
-		}
-	}
-}
-
 void renderer_Update() {
-	process_frame();
-	handle_commands();
 	GPU_Flip(g_Screen);
 	GPU_Clear(g_Screen);
-}
-
-static int text_width(mu_Font font, const char *text, int len) {
-	
-	return 1;
-}
-
-static int text_height(mu_Font font) {
-	return 18;
-}
-
-mu_Context *renderer_GetMUContext() {
-	return mu_ctx;
 }
 
 void renderer_Init() {
@@ -175,29 +131,9 @@ void renderer_Init() {
 		log_Error("Failed to init sdl-gpu: %s", SDL_GetError());
 		exit(1);
 	}
-
-	// Init TTF
-	if (TTF_Init() == -1) {
-		log_Error("Failed to init SDL2_ttf: %s", SDL_GetError());
-		exit(1);
-	}
-
-	// Load font
-	g_Font = TTF_OpenFont("fonts/Roboto/Roboto-Regular.ttf", 12);
-	if (g_Font == NULL) {
-		log_Error("Failed to load font: %s", SDL_GetError());
-		exit(1);
-	}
-
-	// Init microui
-	mu_ctx = malloc(sizeof(mu_Context));
-	mu_init(mu_ctx);
-	mu_ctx->text_width = text_width;
-	mu_ctx->text_height = text_height;
 }
 
 void renderer_Destroy() {
-	TTF_Quit();
 	GPU_Quit();
 	SDL_Quit();
 }
