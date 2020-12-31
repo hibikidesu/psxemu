@@ -5,6 +5,24 @@
 #include "ram.h"
 #include "../utils/utils.h"
 #include "../utils/logger.h"
+#include "../cpu/instructions.h"
+
+void ram_LoadEXE(RAM *ram, char *path) {
+	FILE *file = fopen(path, "rb");
+	uint32_t length;
+	if (file == NULL) {
+		log_Error("Failed to load EXE, file not found.");
+		return;
+	}
+
+	// Get length
+	fseek(file, 0, SEEK_END);
+	length = ftell(file);
+	fseek(file, 0, SEEK_SET);
+
+	// Read into ram
+	fread(ram->data + mask_region(80010000), 1, length, file);
+}
 
 void ram_Dump(RAM *ram, char *path) {
 	FILE *file = NULL;

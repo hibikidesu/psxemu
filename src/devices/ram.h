@@ -12,6 +12,7 @@ typedef struct {
 	uint8_t data[RAM_SIZE];
 } RAM;
 
+void ram_LoadEXE(RAM *ram, char *path);
 void ram_Dump(RAM *ram, char *path);
 uint8_t ram_LoadByte(RAM *ram, uint32_t address);
 uint16_t ram_LoadShort(RAM *ram, uint32_t address);

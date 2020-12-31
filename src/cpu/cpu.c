@@ -8,6 +8,7 @@
 #include "instructions.h"
 #include "../devices/devices.h"
 #include "../devices/bios.h"
+#include "../devices/ram.h"
 #include "../utils/logger.h"
 #include "../utils/ansi.h"
 #include "coprocessors/cop0.h"
@@ -304,6 +305,14 @@ void cpu_NextInstruction(CPU *cpu) {
 
 	cpu->delay_slot = cpu->branch;
 	cpu->branch = false;
+
+	if (cpu->PC == 0x80030000) {
+		ram_LoadEXE(cpu->devices->ram, "psxtest_cpu.exe");
+		cpu_SetRegister(cpu, 4, 1);
+		cpu_SetRegister(cpu, 5, 0);
+		cpu->PC = cpu_GetRegister(cpu, ra);
+		cpu->NEXT_PC = cpu->PC + 4;
+	}
 
 	// Execute instruction
 	cpu_ExecuteInstruction(cpu);
