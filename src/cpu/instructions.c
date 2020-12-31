@@ -15,20 +15,20 @@
 // Helpers
 //
 
-const static char *debugRegisterStrings[32] = {
-	"$zero",
-	"$at",
-	"$v0", "$v1",
-	"$a0", "$a1", "$a2", "$a3",
-	"$t0", "$t1", "$t2", "$t3", "$t4", "$t5", "$t6", "$t7",
-	"$s0", "$s1", "$s2", "$s3", "$s4", "$s5", "$s6", "$s7",
-	"$t8", "$t9",
-	"$k0", "$kl",
-	"$gp",
-	"$sp",
-	"$fp",
-	"$ra"
-};
+// const static char *debugRegisterStrings[32] = {
+// 	"$zero",
+// 	"$at",
+// 	"$v0", "$v1",
+// 	"$a0", "$a1", "$a2", "$a3",
+// 	"$t0", "$t1", "$t2", "$t3", "$t4", "$t5", "$t6", "$t7",
+// 	"$s0", "$s1", "$s2", "$s3", "$s4", "$s5", "$s6", "$s7",
+// 	"$t8", "$t9",
+// 	"$k0", "$kl",
+// 	"$gp",
+// 	"$sp",
+// 	"$fp",
+// 	"$ra"
+// };
 
 // Region Memory Lookup Table
 const static uint32_t REGION_MASK[8] = {
@@ -195,7 +195,7 @@ uint32_t load_Int(CPU *cpu, uint32_t offset) {
 			switch (new_offset - GPU_OFFSET) {
 				// GPUREAD
 				case 0:
-					value = gpu_Load32(cpu->devices->gpu, new_offset);
+					value = gpu_Load32(cpu->devices->gpu, new_offset - GPU_OFFSET);
 					break;
 				// GPUSTAT
 				case 4:
@@ -1304,7 +1304,7 @@ void instruction_Mtc0(CPU *cpu) {
 			break;
 	}
 
-	log_Debug("0x%X: mtc0 %s, %s", cpu->this_instruction, debugRegisterStrings[cpu_r], debugRegisterStrings[cop_r]);
+	// log_Debug("0x%X: mtc0 %s, %s", cpu->this_instruction, debugRegisterStrings[cpu_r], debugRegisterStrings[cop_r]);
 }
 
 void instruction_Mfc0(CPU *cpu) {

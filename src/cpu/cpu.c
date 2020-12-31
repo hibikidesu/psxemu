@@ -4,6 +4,7 @@
 #include <string.h>
 #include <SDL2/SDL.h>
 #include "cpu.h"
+#include "hooks.h"
 #include "instructions.h"
 #include "../devices/devices.h"
 #include "../devices/bios.h"
@@ -76,6 +77,19 @@ void cpu_SetRegister(CPU *cpu, uint32_t index, uint32_t value) {
 void cpu_SetLoadRegisters(CPU *cpu, uint32_t index, uint32_t value) {
 	cpu->load[0] = index;
 	cpu->load[1] = value;
+}
+
+void cpu_Hooks(CPU *cpu) {
+	switch (cpu->PC & 0x1fffffff) {
+		case 0xA0:
+		case 0xB0:
+		case 0xC0:
+			cpuHook_Putchar(cpu);
+			cpuHook_FileOpen(cpu);
+			break;
+		default:
+			break;
+	}
 }
 
 void cpu_ExecuteInstruction(CPU *cpu) {
@@ -269,6 +283,9 @@ void cpu_FetchInstruction(CPU *cpu) {
 void cpu_NextInstruction(CPU *cpu) {
 	// Get next instruction
 	cpu_FetchInstruction(cpu);
+
+	// Hook
+	cpu_Hooks(cpu);
 
 	// Incr to where the next instruction is
 	cpu->CURRENT_PC = cpu->PC;  // For exceptions

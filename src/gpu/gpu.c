@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <stdbool.h>
+#include <string.h>
 #include "gpu.h"
 #include "commandbuffer.h"
 #include "renderer.h"
@@ -7,7 +8,15 @@
 #include "../utils/logger.h"
 
 uint32_t gpu_Load32(GPU *gpu, uint32_t offset) {
-	log_Debug("GPU Read at 0x%X", offset);
+	switch (offset) {
+		// unknown
+		case 0:
+			break;
+		default:
+			log_Error("Unknown GPU read int 0x%X", offset);
+			exit(1);
+			break;
+	}
 	return 0;
 }
 
@@ -216,7 +225,7 @@ void gp0_QuadMonoOpaque(GPU *gpu) {
 }
 
 void gp0_ClearCache(GPU *gpu) {
-	// todo
+	memset(gpu->vram_data, 0, sizeof(gpu->vram_data));
 }
 
 void gp0_ImageLoad(GPU *gpu) {
@@ -228,7 +237,6 @@ void gp0_ImageLoad(GPU *gpu) {
 
 	// Round pixels
 	uint32_t size = ((width * height) + 1) & ~1;
-	log_Debug("Image Size = 0x%08X", size);
 
 	gpu->gp0_words_remaining = size / 2;
 	gpu->gp0_mode = ImageLoad;

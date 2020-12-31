@@ -150,6 +150,8 @@ typedef struct {
 	// Instruction to run
 	uint32_t gp0_ins;
 	GP0Mode gp0_mode;
+	// VRAM data
+	uint8_t vram_data[0x40];
 } GPU;
 
 uint32_t gpu_Load32(GPU *gpu, uint32_t offset);
