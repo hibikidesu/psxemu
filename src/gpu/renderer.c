@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_gpu.h>
 #include "renderer.h"
 #include "../utils/logger.h"
 
