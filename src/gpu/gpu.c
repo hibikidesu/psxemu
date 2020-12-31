@@ -238,12 +238,12 @@ void gp0_QuadShadeOpaque(GPU *gpu) {
 }
 
 void gp0_TriangleShadeOpaque(GPU *gpu) {
-	RendererPosition positions[3] = {
+	struct RendererPosition positions[3] = {
 		renderer_GetPositionFromGP0(commandBuffer_GetValue(gpu->gp0_cmd, 1)),
 		renderer_GetPositionFromGP0(commandBuffer_GetValue(gpu->gp0_cmd, 3)),
 		renderer_GetPositionFromGP0(commandBuffer_GetValue(gpu->gp0_cmd, 5))
 	};
-	RendererColor colors[3] = {
+	struct RendererColor colors[3] = {
 		renderer_GetColorFromGP0(commandBuffer_GetValue(gpu->gp0_cmd, 0)),
 		renderer_GetColorFromGP0(commandBuffer_GetValue(gpu->gp0_cmd, 2)),
 		renderer_GetColorFromGP0(commandBuffer_GetValue(gpu->gp0_cmd, 4))

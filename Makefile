@@ -13,7 +13,7 @@ else
 CFLAGS	+= -O2
 endif
 
-LIBS	:= $(shell pkg-config --static --libs sdl2 glew)
+LIBS	:= $(shell pkg-config --static --libs sdl2)
 SRC		:= $(shell find src -name '*.c')
 OBJS	:= $(patsubst %.c,%.o,$(SRC))
 
