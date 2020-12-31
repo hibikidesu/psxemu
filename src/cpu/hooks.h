@@ -4,7 +4,7 @@
 #include "cpu.h"
 
 // Debug hooks
-#undef HOOK_TTY
+#define HOOK_TTY
 #undef HOOK_FILE_OPEN
 
 // Hook functions

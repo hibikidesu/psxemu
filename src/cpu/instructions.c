@@ -8,6 +8,7 @@
 #include "../devices/bios.h"
 #include "../devices/dma.h"
 #include "../devices/expansion.h"
+#include "../devices/scratchpad.h"
 #include "../gpu/gpu.h"
 #include "../utils/logger.h"
 
@@ -358,6 +359,11 @@ void store_Int(CPU *cpu, uint32_t offset, uint32_t value) {
 		// TIMERS
 		case TIMERS_OFFSET ... TIMERS_OFFSET + TIMERS_SIZE:
 			// log_Debug("Unimplemented timer store");
+			break;
+
+		// Scratchpad
+		case SCRATCHPAD_OFFSET ... SCRATCHPAD_OFFSET + SCRATCHPAD_SIZE:
+			scratchpad_StoreInt(cpu->devices->scratchpad, offset, value);
 			break;
 
 		default:

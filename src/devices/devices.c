@@ -4,6 +4,7 @@
 #include "ram.h"
 #include "dma.h"
 #include "channel.h"
+#include "scratchpad.h"
 #include "../gpu/gpu.h"
 #include "../utils/logger.h"
 
@@ -218,10 +219,12 @@ void devices_AddBios(DEVICES *devices, BIOS *bios) {
 DEVICES *devices_Create() {
 	DEVICES *devices = malloc(sizeof(DEVICES));
 	devices->dma = dma_Create();
+	devices->scratchpad = scratchpad_Create();
 	return devices;
 }
 
 void devices_Destroy(DEVICES *devices) {
 	dma_Destroy(devices->dma);
+	scratchpad_Destroy(devices->scratchpad);
 	free(devices);
 }

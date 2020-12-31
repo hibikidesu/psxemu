@@ -4,6 +4,7 @@
 #include "bios.h"
 #include "ram.h"
 #include "dma.h"
+#include "scratchpad.h"
 #include "../gpu/gpu.h"
 
 typedef struct {
@@ -11,6 +12,7 @@ typedef struct {
 	RAM *ram;
 	DMA *dma;
 	GPU *gpu;
+	SCRATCHPAD *scratchpad;
 } DEVICES;
 
 void devices_RunDMALinkedList(DEVICES *devices, CHANNEL *channel, uint8_t index);
