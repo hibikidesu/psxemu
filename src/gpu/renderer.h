@@ -2,6 +2,7 @@
 #define PSX_RENDERER
 
 #include <stdint.h>
+#include "microui.h"
 
 #define VERTEX_BUFFER_LEN 64 * 1024
 
@@ -17,6 +18,7 @@ typedef struct {
 	uint8_t b;
 } RendererColor;
 
+mu_Context *renderer_GetMUContext();
 void renderer_DrawQuad(RendererPosition *positions, RendererColor *colors);
 void renderer_DrawTriangle(RendererPosition *positions, RendererColor *colors);
 RendererColor renderer_GetColorFromGP0(uint32_t value);

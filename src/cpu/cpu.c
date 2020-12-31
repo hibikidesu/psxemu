@@ -13,6 +13,8 @@
 #include "coprocessors/cop1.h"
 #include "coprocessors/cop2.h"
 #include "coprocessors/cop3.h"
+#include "../gpu/microui.h"
+#include "../gpu/renderer.h"
 
 const static char *debugRegisterStrings[32] = {
 	"$zero",
@@ -29,6 +31,24 @@ const static char *debugRegisterStrings[32] = {
 	"$ra"
 };
 
+static const char button_map[256] = {
+	[SDL_BUTTON_LEFT   & 0xff] = MU_MOUSE_LEFT,
+	[SDL_BUTTON_RIGHT  & 0xff] = MU_MOUSE_RIGHT,
+	[SDL_BUTTON_MIDDLE & 0xff] = MU_MOUSE_MIDDLE,
+};
+
+
+static const char key_map[256] = {
+	[ SDLK_LSHIFT       & 0xff ] = MU_KEY_SHIFT,
+	[ SDLK_RSHIFT       & 0xff ] = MU_KEY_SHIFT,
+	[ SDLK_LCTRL        & 0xff ] = MU_KEY_CTRL,
+	[ SDLK_RCTRL        & 0xff ] = MU_KEY_CTRL,
+	[ SDLK_LALT         & 0xff ] = MU_KEY_ALT,
+	[ SDLK_RALT         & 0xff ] = MU_KEY_ALT,
+	[ SDLK_RETURN       & 0xff ] = MU_KEY_RETURN,
+	[ SDLK_BACKSPACE    & 0xff ] = MU_KEY_BACKSPACE,
+};
+
 void cpu_HandleEvents(CPU *cpu) {
 	SDL_Event event;
 	while (SDL_PollEvent(&event)) {
@@ -36,6 +56,45 @@ void cpu_HandleEvents(CPU *cpu) {
 			case SDL_QUIT:
 				cpu->running = false;
 				break;
+			case SDL_MOUSEMOTION:
+				mu_input_mousemove(renderer_GetMUContext(), event.motion.x, event.motion.y);
+				break;
+			case SDL_MOUSEWHEEL:
+				mu_input_scroll(renderer_GetMUContext(), 0, event.wheel.y * -30);
+				break;
+			case SDL_TEXTINPUT:
+				mu_input_text(renderer_GetMUContext(), event.text.text);
+				break;
+			case SDL_MOUSEBUTTONDOWN:
+			case SDL_MOUSEBUTTONUP: {
+				int b = button_map[event.button.button & 0xff];
+				switch (b) {
+					case SDL_MOUSEBUTTONDOWN:
+						mu_input_mousedown(renderer_GetMUContext(), event.button.x, event.button.y, b);
+						break;
+					case SDL_MOUSEBUTTONUP:
+						mu_input_mouseup(renderer_GetMUContext(), event.button.x, event.button.y, b);
+						break;
+					default:
+						break;
+				}
+				break;
+			}	
+			case SDL_KEYUP:
+			case SDL_KEYDOWN: {
+				int c = key_map[event.key.keysym.sym & 0xff];
+				switch (c) {
+					case SDL_KEYDOWN:
+						mu_input_keydown(renderer_GetMUContext(), c);
+						break;
+					case SDL_KEYUP:
+						mu_input_keyup(renderer_GetMUContext(), c);
+						break;
+					default:
+						break;
+				}
+				break;
+			}
 			default:
 				break;
 		}

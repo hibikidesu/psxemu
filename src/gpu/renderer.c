@@ -1,18 +1,17 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <string.h>
 #include <math.h>
-#include "gl3w/gl3w.h"
 #include <SDL2/SDL_gpu.h>
+#include <SDL2/SDL_ttf.h>
 #include "renderer.h"
 #include "../utils/logger.h"
-
-#define CIMGUI_DEFINE_ENUMS_AND_STRUCTS
-#include <cimgui.h>
-#include <cimgui_impl.h>
+#include "microui.h"
 
 static GPU_Target *g_Screen = NULL;
-static ImGuiIO *imgui_io = NULL;
+static mu_Context *mu_ctx = NULL;
+static TTF_Font *g_Font = NULL;
 
 void renderer_DrawQuad(RendererPosition *positions, RendererColor *colors) {
 	// vertices * (x, y + r, g, b, a)
@@ -124,15 +123,49 @@ RendererPosition renderer_GetPositionFromGP0(uint32_t value) {
 	return pos;
 }
 
-SDL_Window *getSDLWindow() {
-	return SDL_GetWindowFromID(GPU_GetContextTarget()->context->windowID);
+void process_frame() {
+	mu_begin(mu_ctx);
+	// style_window(mu_ctx);
+	// log_window(mu_ctx);
+	// test_window(mu_ctx);
+	mu_end(mu_ctx);
+}
+
+void draw_text(mu_Font font, const char *text, mu_Vec2 pos, mu_Color color) {
+	
+}
+
+void handle_commands() {
+	mu_Command *cmd = NULL;
+	while (mu_next_command(mu_ctx, &cmd)) {
+		switch (cmd->type) {
+			case MU_COMMAND_TEXT:
+				draw_text(cmd->text.font, cmd->text.str, cmd->text.pos, cmd->text.color);
+				break;
+			default:
+				break;
+		}
+	}
 }
 
 void renderer_Update() {
-	// ImGui_ImplOpenGL3_NewFrame();
-	ImGui_ImplSDL2_NewFrame(getSDLWindow());
+	process_frame();
+	handle_commands();
 	GPU_Flip(g_Screen);
 	GPU_Clear(g_Screen);
+}
+
+static int text_width(mu_Font font, const char *text, int len) {
+	
+	return 1;
+}
+
+static int text_height(mu_Font font) {
+	return 18;
+}
+
+mu_Context *renderer_GetMUContext() {
+	return mu_ctx;
 }
 
 void renderer_Init() {
@@ -142,27 +175,29 @@ void renderer_Init() {
 		log_Error("Failed to init sdl-gpu: %s", SDL_GetError());
 		exit(1);
 	}
-	
-	if (gl3wInit()) {
-		log_Error("Failed to init glew: %s");
+
+	// Init TTF
+	if (TTF_Init() == -1) {
+		log_Error("Failed to init SDL2_ttf: %s", SDL_GetError());
 		exit(1);
 	}
 
-	// Init IMGUI
-	igCreateContext(NULL);
-	imgui_io = igGetIO();
+	// Load font
+	g_Font = TTF_OpenFont("fonts/Roboto/Roboto-Regular.ttf", 12);
+	if (g_Font == NULL) {
+		log_Error("Failed to load font: %s", SDL_GetError());
+		exit(1);
+	}
 
-	// Get GPU Context and init imgui
-	GPU_Context *gpu_ctx = GPU_GetContextTarget()->context;
-	ImGui_ImplSDL2_InitForOpenGL(getSDLWindow(), gpu_ctx->context);
-	ImGui_ImplOpenGL3_Init("#version 150");
-
-
-	// Set style
-	igStyleColorsDark(NULL);
+	// Init microui
+	mu_ctx = malloc(sizeof(mu_Context));
+	mu_init(mu_ctx);
+	mu_ctx->text_width = text_width;
+	mu_ctx->text_height = text_height;
 }
 
 void renderer_Destroy() {
+	TTF_Quit();
 	GPU_Quit();
 	SDL_Quit();
 }
