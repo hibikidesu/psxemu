@@ -201,7 +201,18 @@ void gp0_MaskBitSetting(GPU *gpu) {
 }
 
 void gp0_QuadMonoOpaque(GPU *gpu) {
-	log_Debug("DRAW QUAD");
+	RendererPosition positions[4];
+	RendererColor colors[4];
+	int i;
+
+	for (i = 0; i < 4; i++) {
+		// Position command 1-4
+		positions[i] = renderer_GetPositionFromGP0(commandBuffer_GetValue(gpu->gp0_cmd, i + 1));
+		// Color always stays at 0
+		colors[i] = renderer_GetColorFromGP0(commandBuffer_GetValue(gpu->gp0_cmd, 0));
+	}
+
+	renderer_DrawQuad(positions, colors);
 }
 
 void gp0_ClearCache(GPU *gpu) {
@@ -234,25 +245,39 @@ void gp0_ImageStore(GPU *gpu) {
 }
 
 void gp0_QuadShadeOpaque(GPU *gpu) {
-	log_Warn("Unhandled QuadShadeOpaque");
+	RendererPosition positions[4];
+	RendererColor colors[4];
+	int i;
+
+	for (i = 0; i < 4; i++) {
+		positions[i] = renderer_GetPositionFromGP0(commandBuffer_GetValue(gpu->gp0_cmd, 1 + (i * 2)));
+		colors[i] = renderer_GetColorFromGP0(commandBuffer_GetValue(gpu->gp0_cmd, i * 2));
+	}
+	renderer_DrawQuad(positions, colors);
 }
 
 void gp0_TriangleShadeOpaque(GPU *gpu) {
-	struct RendererPosition positions[3] = {
-		renderer_GetPositionFromGP0(commandBuffer_GetValue(gpu->gp0_cmd, 1)),
-		renderer_GetPositionFromGP0(commandBuffer_GetValue(gpu->gp0_cmd, 3)),
-		renderer_GetPositionFromGP0(commandBuffer_GetValue(gpu->gp0_cmd, 5))
-	};
-	struct RendererColor colors[3] = {
-		renderer_GetColorFromGP0(commandBuffer_GetValue(gpu->gp0_cmd, 0)),
-		renderer_GetColorFromGP0(commandBuffer_GetValue(gpu->gp0_cmd, 2)),
-		renderer_GetColorFromGP0(commandBuffer_GetValue(gpu->gp0_cmd, 4))
-	};
-	renderer_DrawTriangleShade(positions, colors);
+	RendererPosition positions[3];
+	RendererColor colors[3];
+	int i;
+
+	for (i = 0; i < 3; i++) {
+		positions[i] = renderer_GetPositionFromGP0(commandBuffer_GetValue(gpu->gp0_cmd, 1 + (i * 2)));
+		colors[i] = renderer_GetColorFromGP0(commandBuffer_GetValue(gpu->gp0_cmd, i * 2));
+	}
+	renderer_DrawTriangle(positions, colors);
 }
 
 void gp0_QuadTextureBlendOpaque(GPU *gpu) {
-	log_Warn("Unhandled QuadTextureBlendOpaque");
+	RendererPosition positions[4];
+	RendererColor colors[4];
+	int i;
+
+	for (i = 0; i < 4; i++) {
+		positions[i] = renderer_GetPositionFromGP0(commandBuffer_GetValue(gpu->gp0_cmd, 1 + (i * 2)));
+		colors[i] = (RendererColor){255, 0, 255};
+	}
+	renderer_DrawQuad(positions, colors);
 }
 
 void gp0_RunFunction(GPU *gpu) {

@@ -12,6 +12,7 @@
 int psx_Run(char *biosFile) {
 	log_Info("Running psx");
 	int status = 0;
+	int i;
 
 	// Create/Init devices
 	CPU *cpu = cpu_Create();
@@ -39,7 +40,10 @@ int psx_Run(char *biosFile) {
 	// Run loop
 	cpu->running = 1;
 	while (cpu->running) {
-		cpu_NextInstruction(cpu);
+		for (i = 0; i < 1000000; i++) {
+			cpu_NextInstruction(cpu);
+		}
+		cpu_HandleEvents(cpu);
 	}
 
 	// Cleanup

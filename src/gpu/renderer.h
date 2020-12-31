@@ -6,20 +6,21 @@
 #define VERTEX_BUFFER_LEN 64 * 1024
 
 // Pos in VRAM
-struct RendererPosition {
+typedef struct {
 	uint16_t x;
 	uint16_t y;
-};
+} RendererPosition;
 // Color
-struct RendererColor {
+typedef struct {
 	uint8_t r;
 	uint8_t g;
 	uint8_t b;
-};
+} RendererColor;
 
-void renderer_DrawTriangleShade(struct RendererPosition *positions, struct RendererColor *colors);
-struct RendererColor renderer_GetColorFromGP0(uint32_t value);
-struct RendererPosition renderer_GetPositionFromGP0(uint32_t value);
+void renderer_DrawQuad(RendererPosition *positions, RendererColor *colors);
+void renderer_DrawTriangle(RendererPosition *positions, RendererColor *colors);
+RendererColor renderer_GetColorFromGP0(uint32_t value);
+RendererPosition renderer_GetPositionFromGP0(uint32_t value);
 void renderer_Update();
 void renderer_Init();
 void renderer_Destroy();

@@ -14,6 +14,8 @@ attempt at a psx emulator to better understand lower level stuff smh
 # Requirements
 - [SDL2](https://www.libsdl.org/)
 - [sdl-gpu](https://github.com/grimfang4/sdl-gpu)
+- [cimgui](https://github.com/cimgui/cimgui)
+- [cimgui-sdl2_opengl3](https://github.com/cimgui/cimgui/tree/docking_inter/backend_test)
 
 # References Used
 - [psx-guide](https://svkt.org/~simias/guide.pdf)

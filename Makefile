@@ -13,7 +13,7 @@ else
 CFLAGS	+= -O2
 endif
 
-LIBS	:= $(shell pkg-config --static --libs sdl2 glew) -lSDL2_gpu
+LIBS	:= $(shell pkg-config --static --libs sdl2 gl) -lSDL2_gpu /usr/lib/cimgui.so -lcimgui_sdl
 SRC		:= $(shell find src -name '*.c')
 OBJS	:= $(patsubst %.c,%.o,$(SRC))
 
