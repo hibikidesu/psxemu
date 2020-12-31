@@ -94,8 +94,8 @@ void cpu_Hooks(CPU *cpu) {
 }
 
 void cpu_ExecuteInstruction(CPU *cpu) {
-	// log_Debug("Current Instruction: 0x%08X, Next Instruction: 0x%08X, PC: 0x%08X, SR: 0x%08X", 
-	// 	cpu->this_instruction, cpu->next_instruction, cpu->PC, cpu->SR);
+	log_Debug("Current Instruction: 0x%08X, PC: 0x%08X, SR: 0x%08X", 
+		cpu->this_instruction, cpu->PC, cpu->SR);
 	// Decode instruction bits [31:26]
 	switch (cpu->this_instruction >> 26) {
 		// SPECIAL
@@ -305,14 +305,6 @@ void cpu_NextInstruction(CPU *cpu) {
 
 	cpu->delay_slot = cpu->branch;
 	cpu->branch = false;
-
-	if (cpu->PC == 0x80030000) {
-		ram_LoadEXE(cpu->devices->ram, "psxtest_cpu.exe");
-		cpu_SetRegister(cpu, 4, 1);
-		cpu_SetRegister(cpu, 5, 0);
-		cpu->PC = cpu_GetRegister(cpu, ra);
-		cpu->NEXT_PC = cpu->PC + 4;
-	}
 
 	// Execute instruction
 	cpu_ExecuteInstruction(cpu);

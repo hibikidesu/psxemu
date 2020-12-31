@@ -242,6 +242,12 @@ void store_Byte(CPU *cpu, uint32_t offset, uint8_t value) {
 			// log_Debug("Stored byte at 0x%X", new_offset);
 			break;
 
+		case 0x1F801800:
+		case 0x1F801801:
+		case 0x1F801802:
+		case 0x1F801803:
+			break;
+
 		default:
 			log_Error("%s Not in memory control range, Address 0x%X, Tried to store 0x%X", 
 				__FUNCTION__, new_offset, value);
