@@ -8,10 +8,13 @@
 // GP0 Instructions
 #define GP0_NOP					0x00
 #define GP0_CLEARCACHE			0x01
+#define GP0_FILLRECT			0x02
+#define GP0_UNKNOWN				0x08
 #define GP0_QUADMONOOPAQUE		0x28
 #define GP0_QUADTEXBLENDOPAQUE	0x2c
 #define GP0_TRISHADEOPAQUE		0x30
 #define GP0_QUADSHADEOPAQUE		0x38
+#define GP0_RECT16STTEX			0x7F
 #define GP0_IMAGE_LOAD			0xA0
 #define GP0_IMAGE_STORE			0xC0
 #define GP0_DRAWMODE			0xE1

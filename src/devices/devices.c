@@ -69,13 +69,13 @@ void devices_RunDMABlock(DEVICES *devices, CHANNEL *channel, uint8_t index) {
 	// Get Address
 	addr = channel_GetBase(channel);
 
+	log_Debug("Channel %u Base Address: 0x%08X", index, addr);
+
 	// Get transfer size
 	if ((size = channel_GetTransferSize(channel)) == 0) {
 		log_Error("Failed to find channel transfer size");
 		exit(1);
 	}
-
-	// log_Debug("Channel %u Base Address: 0x%08X, Block Size: %u", index, addr, size);
 
 	// not again notlikebep
 	while (size > 0) {
@@ -173,7 +173,7 @@ void devices_DMASetRegister(DEVICES *devices, uint32_t offset, uint32_t value) {
 			}
 			// Do dma if channel is active.
 			if (channel_IsActive(channel)) {
-				// log_Debug("Running Channel 0x%X", major);
+				log_Debug("Running Channel 0x%X", major);
 				devices_RunDMA(devices, channel, major);
 				// log_Debug("Done 0x%X", major);
 			}

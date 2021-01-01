@@ -312,13 +312,6 @@ void store_Int(CPU *cpu, uint32_t offset, uint32_t value) {
 
 	// Check addresses
 	switch (new_offset) {
-		// If its a bad expansion
-		case 0x1f802000:
-		case 0x1f000000:
-			log_Error("Bad expansion: Address 0x%X", new_offset);
-			exit(1);
-			break;
-
 		// Write into MEM_CONTROL
 		case MEM_IO ... MEM_IO + MEM_IO_SIZE:
 			// log_Debug("MEM_CONTROL write");
@@ -374,7 +367,13 @@ void store_Int(CPU *cpu, uint32_t offset, uint32_t value) {
 
 		// Scratchpad
 		case SCRATCHPAD_OFFSET ... SCRATCHPAD_OFFSET + SCRATCHPAD_SIZE:
-			scratchpad_StoreInt(cpu->devices->scratchpad, offset, value);
+			scratchpad_StoreInt(cpu->devices->scratchpad, new_offset, value);
+			break;
+
+		// Expansion 1
+		case EXPANSION_1_OFFSET ... EXPANSION_1_OFFSET + EXPANSION_1_SIZE - 1:
+			// Unimplemented
+			expansion1_StoreInt(cpu, new_offset, value);
 			break;
 
 		default:
@@ -1300,7 +1299,7 @@ void instruction_Mtc0(CPU *cpu) {
 		case 13:
 			if (v != 0) {
 				log_Error("Unhandled COP0 register");
-				// exit(1);
+				exit(1);
 			}
 			break;
 		// Breakpoint registers

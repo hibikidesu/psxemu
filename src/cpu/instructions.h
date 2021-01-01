@@ -15,10 +15,6 @@
 #define SPU_OFFSET 0x1F801C00
 #define SPU_SIZE 640
 
-// Expansion 1
-#define EXPANSION_1_OFFSET 0x1f000000
-#define EXPANSION_1_SIZE 512 * 1024
-
 // Interrupt Registers
 #define IRQ_CONTROL_OFFSET 0x1F801070
 #define IRQ_CONTROL_SIZE 8

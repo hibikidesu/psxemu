@@ -74,10 +74,14 @@ void cpuHook_SystemErrorUnresolvedException(CPU *cpu) {
 void cpuHook_FastBoot(CPU *cpu) {
 #ifdef HOOK_FASTBOOT
 	if (cpu->PC == 0x80030000) {
-		ExeFile *exe = ram_LoadEXE(cpu->devices->ram, "resolution.exe");
+		ExeFile *exe = ram_LoadEXE(cpu->devices->ram, "VBLANK.exe");
+		if (exe == NULL) {
+			cpu->running = false;
+			return;
+		}
 		cpu->PC = exe->initial_pc;
 		cpu->NEXT_PC = cpu->PC + 4;
-		log_Info("Loaded EXE at 0x%X, RAM: 0x%X", mask_region(exe->initial_pc), mask_region(exe->ram_destination));
+		log_Info("Loaded EXE PC: 0x%X, RAM: 0x%X", mask_region(exe->initial_pc), mask_region(exe->ram_destination));
 		cpu_SetRegister(cpu, 28, exe->initial_gp);
 		cpu_SetRegister(cpu, 29, exe->initial_spfp_base);
 		cpu_SetRegister(cpu, 30, exe->initial_spfp_base);

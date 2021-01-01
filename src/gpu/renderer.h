@@ -15,6 +15,7 @@ typedef struct {
 	uint8_t b;
 } RendererColor;
 
+void renderer_DrawRect(RendererPosition *position, RendererColor color, uint8_t alpha);
 void renderer_DrawQuad(RendererPosition *positions, RendererColor *colors);
 void renderer_DrawTriangle(RendererPosition *positions, RendererColor *colors);
 RendererColor renderer_GetColorFromGP0(uint32_t value);

@@ -104,6 +104,10 @@ void renderer_DrawTriangle(RendererPosition *positions, RendererColor *colors) {
 	GPU_TriangleBatch(NULL, g_Screen, 3, values, 0, NULL, GPU_BATCH_XY_RGBA);
 }
 
+void renderer_DrawRect(RendererPosition *position, RendererColor color, uint8_t alpha) {
+	GPU_Rectangle(g_Screen, position[0].x, position[0].y, position[1].x, position[1].y, (SDL_Color){color.r, color.g, color.b, alpha});
+}
+
 RendererColor renderer_GetColorFromGP0(uint32_t value) {
 	RendererColor color;
 	color.r = (uint8_t)value;

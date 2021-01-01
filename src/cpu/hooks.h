@@ -12,7 +12,7 @@
 // Log file read access (unimplemented)
 #undef HOOK_FILE_OPEN
 // Sideload EXE's without entering boot/cdrom load
-#define HOOK_FASTBOOT
+#undef HOOK_FASTBOOT
 
 //
 // Hook functions

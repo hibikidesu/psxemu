@@ -3,11 +3,16 @@
 
 #include "../cpu/cpu.h"
 
+// Expansion 1 (ROM/RAM)
+#define EXPANSION_1_OFFSET 0x1f000000
+#define EXPANSION_1_SIZE 8192 * 1024
+
 // Expansion 2 (I/O Ports)
 #define EXPANSION_2_OFFSET 0x1F802000
 #define EXPANSION_2_SIZE 66
 #define EXPANSION_2_POST 0x1F802041
 
 void expansion2_StoreByte(CPU *cpu, uint32_t offset, uint8_t value);
+void expansion1_StoreInt(CPU *cpu, uint32_t offset, uint32_t value);
 
 #endif

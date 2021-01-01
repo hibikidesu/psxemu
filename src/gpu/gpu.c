@@ -288,6 +288,57 @@ void gp0_QuadTextureBlendOpaque(GPU *gpu) {
 	renderer_DrawQuad(positions, colors);
 }
 
+void gp0_FillRectangle(GPU *gpu) {
+	RendererPosition positions[2];
+	RendererColor color = renderer_GetColorFromGP0(commandBuffer_GetValue(gpu->gp0_cmd, 0));
+	RendererPosition tl = renderer_GetPositionFromGP0(commandBuffer_GetValue(gpu->gp0_cmd, 1));
+	RendererPosition wh = renderer_GetPositionFromGP0(commandBuffer_GetValue(gpu->gp0_cmd, 2));
+
+	uint16_t left = tl.x & 0x3f0;
+	uint16_t top = tl.y & 0x1ff;
+	uint16_t width, height;
+
+	switch (wh.x & 0x7ff) {
+		case 0x400:
+			width = 0;
+			break;
+		default:
+			width = ((wh.x & 0x7ff) + 0xf) & 0x3f0;
+			break;
+	}
+	height = (wh.y & 0x1ff);
+
+	positions[0].x = left;
+	positions[0].y = top;
+	positions[1].x = left + width;
+	positions[1].y = top + height;
+
+	// Overflow
+	if (positions[1].y > 0x400) {
+		positions[1].y = 0x400;
+	}
+
+	if (positions[1].x > 0x200) {
+		positions[1].x = 0x200;
+	}
+	
+	// log_Debug("X: %d Y: %d W: %d H: %d", positions[0].x, positions[0].y, positions[1].x, positions[1].y);
+	// exit(1);
+	renderer_DrawRect(positions, color, 255);
+}
+
+void gp0_Rectangle16SemiTransparentTextured(GPU *gpu) {
+	RendererPosition positions[2] = {
+		renderer_GetPositionFromGP0(commandBuffer_GetValue(gpu->gp0_cmd, 1))
+	};
+	RendererColor color = renderer_GetColorFromGP0(commandBuffer_GetValue(gpu->gp0_cmd, 0));
+
+	positions[1].x = positions[0].x + 16;
+	positions[1].y = positions[0].y + 16;
+
+	renderer_DrawRect(positions, color, 255);
+}
+
 void gp0_RunFunction(GPU *gpu) {
 	switch (gpu->gp0_ins) {
 		case GP0_NOP:
