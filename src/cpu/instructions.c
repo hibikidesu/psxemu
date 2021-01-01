@@ -11,6 +11,7 @@
 #include "../devices/scratchpad.h"
 #include "../gpu/gpu.h"
 #include "../spu/spu.h"
+#include "../devices/cdrom.h"
 #include "../utils/logger.h"
 
 //
@@ -108,6 +109,9 @@ uint8_t load_Byte(CPU *cpu, uint32_t offset) {
 		// RAM
 		case RAM_OFFSET ... RAM_OFFSET + RAM_SIZE:
 			value = ram_LoadByte(cpu->devices->ram, new_offset);
+			break;
+
+		case CDROM_OFFSET ... CDROM_OFFSET + CDROM_SIZE:
 			break;
 
 		default:

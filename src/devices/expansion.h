@@ -6,6 +6,7 @@
 // Expansion 1 (ROM/RAM)
 #define EXPANSION_1_OFFSET 0x1f000000
 #define EXPANSION_1_SIZE 8192 * 1024
+#define EXPANSION_1_PRE_BOOT_ID 0x84
 
 // Expansion 2 (I/O Ports)
 #define EXPANSION_2_OFFSET 0x1F802000

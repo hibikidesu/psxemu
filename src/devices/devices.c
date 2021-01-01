@@ -5,6 +5,7 @@
 #include "dma.h"
 #include "channel.h"
 #include "scratchpad.h"
+#include "cdrom.h"
 #include "../gpu/gpu.h"
 #include "../utils/logger.h"
 
@@ -202,6 +203,10 @@ void devices_DMASetRegister(DEVICES *devices, uint32_t offset, uint32_t value) {
 			exit(1);
 			break;
 	}
+}
+
+void devices_AddCDROM(DEVICES *devices, CDROM *cdrom) {
+	devices->cdrom = cdrom;
 }
 
 void devices_AddGPU(DEVICES *devices, GPU *gpu) {

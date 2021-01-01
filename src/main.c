@@ -5,6 +5,7 @@
 #include "devices/bios.h"
 #include "devices/ram.h"
 #include "devices/devices.h"
+#include "devices/cdrom.h"
 #include "gpu/gpu.h"
 #include "utils/logger.h"
 #include "tests.h"
@@ -19,10 +20,12 @@ int psx_Run(char *biosFile) {
 	BIOS *bios = bios_Create(biosFile);
 	RAM *ram = ram_Create();
 	GPU *gpu = gpu_Create();
+	CDROM *cdrom = cdrom_Create();
 	DEVICES *devices = NULL;
 
 	// Check if success opening bios
 	if (bios == NULL) {
+		cdrom_Free(cdrom);
 		gpu_Destroy(gpu);
 		ram_Destroy(ram);
 		bios_Destroy(bios);
@@ -35,6 +38,7 @@ int psx_Run(char *biosFile) {
 	devices_AddBios(devices, bios);
 	devices_AddRAM(devices, ram);
 	devices_AddGPU(devices, gpu);
+	devices_AddCDROM(devices, cdrom);
 	cpu_AddDevices(cpu, devices);
 
 	// Run loop
@@ -47,6 +51,7 @@ int psx_Run(char *biosFile) {
 	}
 
 	// Cleanup
+	cdrom_Free(cdrom);
 	gpu_Destroy(gpu);
 	ram_Destroy(ram);
 	devices_Destroy(devices);

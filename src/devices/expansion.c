@@ -17,8 +17,18 @@ void expansion2_StoreByte(CPU *cpu, uint32_t offset, uint8_t value) {
 }
 
 uint32_t expansion1_LoadInt(CPU *cpu, uint32_t offset) {
-	log_Warn("Unimplemented expansion 1 load int at 0x%X (0x%X)", offset, offset + EXPANSION_1_OFFSET);
-	return 0;
+	uint32_t value = 0;
+	switch (offset) {
+		// Pre-Boot ID ("Licensed by Sony Computer Entertainment Inc.")
+		// Not sure what to do with it, leaving blank
+		case EXPANSION_1_PRE_BOOT_ID:
+			break;
+		default:
+			log_Error("Unimplemented expansion 1 load int at 0x%X (0x%X)", offset, offset + EXPANSION_1_OFFSET);
+			exit(1);
+			break;
+	}
+	return value;
 }
 
 void expansion1_StoreInt(CPU *cpu, uint32_t offset, uint32_t value) {
