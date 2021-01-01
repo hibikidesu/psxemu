@@ -127,19 +127,18 @@ uint16_t load_Short(CPU *cpu, uint32_t offset) {
 	switch (new_offset) {
 		// SPU
 		case SPU_OFFSET ... SPU_OFFSET + SPU_SIZE:
-			// log_Debug("Unimplemented SPU short read");
+			log_Debug("Unimplemented SPU short read");
 			value = 0x0;
 			break;
 
 		// RAM
 		case RAM_OFFSET ... RAM_OFFSET + RAM_SIZE:
 			value = ram_LoadShort(cpu->devices->ram, new_offset);
-			// log_Debug("%s Stored 0x%X at 0x%X (RAM)", __FUNCTION__, value, new_offset);
 			break;
 
 		// IRQ
 		case IRQ_CONTROL_OFFSET ... IRQ_CONTROL_OFFSET + IRQ_CONTROL_SIZE:
-			// log_Debug("Unimplemented IRQ short read");
+			log_Debug("Unimplemented IRQ short read");
 			value = 0x0;
 			break;
 
@@ -168,18 +167,16 @@ uint32_t load_Int(CPU *cpu, uint32_t offset) {
 		// Load from ram
 		case RAM_OFFSET ... RAM_OFFSET + RAM_SIZE:
 			value = ram_LoadInt(cpu->devices->ram, new_offset);
-			// log_Debug("Read int 0x%X from 0x%X (RAM)", value, new_offset);
 			break;
 
 		// BIOS
 		case BIOS_OFFSET ... BIOS_OFFSET + BIOS_SIZE:
 			value = bios_LoadInt(cpu->devices->bios, new_offset);
-			// log_Debug("Read int 0x%X from 0x%X (BIOS)", value, new_offset);
 			break;
 
 		// Interrupt Control
 		case IRQ_CONTROL_OFFSET ... IRQ_CONTROL_OFFSET + IRQ_CONTROL_SIZE:
-			// log_Debug("Unimplemented Interrupt Control Read");
+			log_Debug("Unimplemented Interrupt Control Read");
 			value = 0x0;
 			break;
 
@@ -190,7 +187,6 @@ uint32_t load_Int(CPU *cpu, uint32_t offset) {
 
 		// GPU
 		case GPU_OFFSET ... GPU_OFFSET + GPU_SIZE:
-			// log_Debug("Unimplemented GPU Read");
 			switch (new_offset - GPU_OFFSET) {
 				// GPUREAD
 				case 0:
@@ -209,7 +205,7 @@ uint32_t load_Int(CPU *cpu, uint32_t offset) {
 
 		// TIMERS
 		case TIMERS_OFFSET ... TIMERS_OFFSET + TIMERS_SIZE:
-			// log_Debug("Unimplemented timer load");
+			log_Debug("Unimplemented timer load");
 			value = 0x0;
 			break;
 
@@ -242,13 +238,6 @@ void store_Byte(CPU *cpu, uint32_t offset, uint8_t value) {
 		// RAM
 		case RAM_OFFSET ... RAM_OFFSET + RAM_SIZE:
 			ram_StoreByte(cpu->devices->ram, new_offset, value);
-			// log_Debug("Stored byte at 0x%X", new_offset);
-			break;
-
-		case 0x1F801800:
-		case 0x1F801801:
-		case 0x1F801802:
-		case 0x1F801803:
 			break;
 
 		default:
@@ -272,12 +261,12 @@ void store_Short(CPU *cpu, uint32_t offset, uint16_t value) {
 	switch (new_offset) {
 		// SPU
 		case SPU_OFFSET ... SPU_OFFSET + SPU_SIZE:
-			// log_Debug("Unimplemented store to SPU");
+			log_Debug("%s Unimplemented store to SPU", __FUNCTION__);
 			break;
 
 		// TIMERS
 		case TIMERS_OFFSET ... TIMERS_OFFSET + TIMERS_SIZE:
-			// log_Debug("Unimplemented timer store");
+			log_Debug("%s Unimplemented timer store", __FUNCTION__);
 			break;
 
 		// RAM
@@ -287,7 +276,7 @@ void store_Short(CPU *cpu, uint32_t offset, uint16_t value) {
 
 		// IRQ
 		case IRQ_CONTROL_OFFSET ... IRQ_CONTROL_OFFSET + IRQ_CONTROL_SIZE:
-			// log_Debug("Unimplemented IRQ short write");
+			log_Debug("%s Unimplemented IRQ short write", __FUNCTION__);
 			break;
 
 		default:
@@ -327,13 +316,12 @@ void store_Int(CPU *cpu, uint32_t offset, uint32_t value) {
 
 		// IRQ
 		case IRQ_CONTROL_OFFSET ... IRQ_CONTROL_OFFSET + IRQ_CONTROL_SIZE:
-			// log_Debug("Unimplemented Interrupt Control Write");
+			log_Debug("%s Unimplemented Interrupt Control Write", __FUNCTION__);
 			break;
 
 		// RAM Area
 		case RAM_OFFSET ... RAM_OFFSET + RAM_SIZE:
 			ram_StoreInt(cpu->devices->ram, new_offset, value);
-			// log_Debug("Stored int at 0x%X", new_offset);
 			break;
 
 		// Direct Memory Access
@@ -360,7 +348,7 @@ void store_Int(CPU *cpu, uint32_t offset, uint32_t value) {
 
 		// TIMERS
 		case TIMERS_OFFSET ... TIMERS_OFFSET + TIMERS_SIZE:
-			// log_Debug("Unimplemented timer store");
+			log_Debug("Unimplemented timer store");
 			break;
 
 		// Scratchpad
