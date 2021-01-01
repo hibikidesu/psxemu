@@ -215,6 +215,11 @@ uint32_t load_Int(CPU *cpu, uint32_t offset) {
 			value = 0x0;
 			break;
 
+		// Scratchpad
+		case SCRATCHPAD_OFFSET ... SCRATCHPAD_OFFSET + SCRATCHPAD_SIZE:
+			value = scratchpad_LoadInt(cpu->devices->scratchpad, offset);
+			break;
+
 		default:
 			log_Error("%s Unkown memory read address 0x%X", 
 				__FUNCTION__, new_offset);
@@ -1295,7 +1300,7 @@ void instruction_Mtc0(CPU *cpu) {
 		case 13:
 			if (v != 0) {
 				log_Error("Unhandled COP0 register");
-				exit(1);
+				// exit(1);
 			}
 			break;
 		// Breakpoint registers

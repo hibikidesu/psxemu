@@ -7,21 +7,63 @@
 #include "../utils/logger.h"
 #include "../cpu/instructions.h"
 
-void ram_LoadEXE(RAM *ram, char *path) {
+ExeFile *ram_LoadEXE(RAM *ram, char *path) {
+	char buffer[0x10];
+	uint32_t length = 0;
 	FILE *file = fopen(path, "rb");
-	uint32_t length;
 	if (file == NULL) {
 		log_Error("Failed to load EXE, file not found.");
-		return;
+		return NULL;
 	}
 
-	// Get length
 	fseek(file, 0, SEEK_END);
 	length = ftell(file);
 	fseek(file, 0, SEEK_SET);
 
-	// Read into ram
-	fread(ram->data + mask_region(80010000), 1, length, file);
+	// Check header
+	fread(buffer, 1, 0x10, file);
+	if (strncmp(buffer, "PS-X EXE", 0x10) != 0) {
+		log_Error("Failed to load EXE, invalid header.");
+		fclose(file);
+		return NULL;
+	}
+
+	ExeFile *exe = malloc(sizeof(ExeFile));
+	// Initial SP
+	fread(buffer, 1, sizeof(uint32_t), file);
+	exe->initial_pc = utils_LoadLittleEndianInt((uint8_t*)buffer, 0);
+	// Initial GP
+	fread(buffer, 1, sizeof(uint32_t), file);
+	exe->initial_gp = utils_LoadLittleEndianInt((uint8_t*)buffer, 0);
+	// Destination in RAM
+	fread(buffer, 1, sizeof(uint32_t), file);
+	exe->ram_destination = utils_LoadLittleEndianInt((uint8_t*)buffer, 0);
+	// Filesize
+	fread(buffer, 1, sizeof(uint32_t), file);
+	exe->file_size = utils_LoadLittleEndianInt((uint8_t*)buffer, 0);
+
+	// Unused
+	fseek(file, 8, SEEK_SET);
+
+	// Memfill start address
+	fread(buffer, 1, sizeof(uint32_t), file);
+	exe->fill_start_address = utils_LoadLittleEndianInt((uint8_t*)buffer, 0);
+	// Memfill size
+	fread(buffer, 1, sizeof(uint32_t), file);
+	exe->fill_size = utils_LoadLittleEndianInt((uint8_t*)buffer, 0);
+	// Initial SP & FP base
+	fread(buffer, 1, sizeof(uint32_t), file);
+	exe->initial_spfp_base = utils_LoadLittleEndianInt((uint8_t*)buffer, 0);
+	// SP FP off
+	fread(buffer, 1, sizeof(uint32_t), file);
+	exe->initial_spfp_off = utils_LoadLittleEndianInt((uint8_t*)buffer, 0);
+
+	// Marker unchecked, TODO?
+
+	fseek(file, 0x800, SEEK_SET);
+	fread(ram->data + mask_region(exe->ram_destination), 1, length - 0x800, file);
+
+	return exe;
 }
 
 void ram_Dump(RAM *ram, char *path) {

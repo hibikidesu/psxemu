@@ -87,6 +87,9 @@ void cpu_Hooks(CPU *cpu) {
 		case 0xC0:
 			cpuHook_Putchar(cpu);
 			cpuHook_FileOpen(cpu);
+			cpuHook_SystemErrorUnresolvedException(cpu);
+			break;
+		case 0x30000:
 			break;
 		default:
 			break;
@@ -94,8 +97,8 @@ void cpu_Hooks(CPU *cpu) {
 }
 
 void cpu_ExecuteInstruction(CPU *cpu) {
-	log_Debug("Current Instruction: 0x%08X, PC: 0x%08X, SR: 0x%08X", 
-		cpu->this_instruction, cpu->PC, cpu->SR);
+	// log_Debug("Current Instruction: 0x%08X, PC: 0x%08X, SR: 0x%08X", 
+	// 	cpu->this_instruction, cpu->PC, cpu->SR);
 	// Decode instruction bits [31:26]
 	switch (cpu->this_instruction >> 26) {
 		// SPECIAL
@@ -282,11 +285,11 @@ void cpu_FetchInstruction(CPU *cpu) {
 }
 
 void cpu_NextInstruction(CPU *cpu) {
-	// Get next instruction
-	cpu_FetchInstruction(cpu);
-
 	// Hook
 	cpu_Hooks(cpu);
+
+	// Get next instruction
+	cpu_FetchInstruction(cpu);
 
 	// Incr to where the next instruction is
 	cpu->CURRENT_PC = cpu->PC;  // For exceptions

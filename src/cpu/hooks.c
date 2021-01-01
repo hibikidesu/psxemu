@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #include <stdio.h>
 #include <stdint.h>
 #include "hooks.h"
@@ -52,6 +53,36 @@ void cpuHook_FileOpen(CPU *cpu) {
 			break;
 		default:
 			break;
+	}
+#endif
+}
+
+void cpuHook_SystemErrorUnresolvedException(CPU *cpu) {
+	switch (cpu_GetRegister(cpu, 9))
+	{
+		case 0x40:
+			log_Error("SystemErrorUnresolvedException");
+			exit(1);
+			break;
+		default:
+			break;
+	}
+}
+
+void cpuHook_FastBoot(CPU *cpu) {
+#ifdef HOOK_FASTBOOT
+	if (cpu->PC == 0x80030000) {
+		ExeFile *exe = ram_LoadEXE(cpu->devices->ram, "resolution.exe");
+		cpu->PC = exe->initial_pc;
+		cpu->NEXT_PC = cpu->PC + 4;
+		log_Info("Loaded EXE at 0x%X, RAM: 0x%X", mask_region(exe->initial_pc), mask_region(exe->ram_destination));
+		cpu_SetRegister(cpu, 28, exe->initial_gp);
+		cpu_SetRegister(cpu, 29, exe->initial_spfp_base);
+		cpu_SetRegister(cpu, 30, exe->initial_spfp_base);
+		cpu_SetRegister(cpu, 29, exe->initial_spfp_base + exe->initial_spfp_off);
+		cpu_SetRegister(cpu, 30, exe->initial_spfp_base + exe->initial_spfp_off);
+		free(exe);
+		ram_Dump(cpu->devices->ram, "ram.bin");
 	}
 #endif
 }

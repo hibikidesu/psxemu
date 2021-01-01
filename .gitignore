@@ -3,3 +3,7 @@ psxemu
 data/*
 .vscode
 ram.bin
+*.exe
+*.ps-exe
+*.bin
+*.cue

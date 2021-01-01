@@ -9,10 +9,21 @@
 #define RAM_BIOS_SIZE 64 * 1024  // 64K for bios
 
 typedef struct {
+	uint32_t initial_pc;
+	uint32_t initial_gp;
+	uint32_t ram_destination;
+	uint32_t file_size;
+	uint32_t fill_start_address;
+	uint32_t fill_size;
+	uint32_t initial_spfp_base;
+	uint32_t initial_spfp_off;
+	uint32_t marker;
+} ExeFile;
+typedef struct {
 	uint8_t data[RAM_SIZE];
 } RAM;
 
-void ram_LoadEXE(RAM *ram, char *path);
+ExeFile *ram_LoadEXE(RAM *ram, char *path);
 void ram_Dump(RAM *ram, char *path);
 uint8_t ram_LoadByte(RAM *ram, uint32_t address);
 uint16_t ram_LoadShort(RAM *ram, uint32_t address);
