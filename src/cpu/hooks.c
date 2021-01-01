@@ -71,8 +71,8 @@ void cpuHook_SystemErrorUnresolvedException(CPU *cpu) {
 	}
 }
 
-void cpuHook_FastBoot(CPU *cpu) {
-#ifdef HOOK_FASTBOOT
+void cpuHook_SideLoad(CPU *cpu) {
+#ifdef HOOK_SIDELOAD
 	if (cpu->PC == 0x80030000) {
 		ExeFile *exe = ram_LoadEXE(cpu->devices->ram, "CPUADD.exe");
 		if (exe == NULL) {

@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "commandbuffer.h"
+#include "imagebuffer.h"
 
 // GP0 Instructions
 #define GP0_NOP					0x00
@@ -153,8 +154,8 @@ typedef struct {
 	// Instruction to run
 	uint32_t gp0_ins;
 	GP0Mode gp0_mode;
-	// VRAM data
-	uint8_t vram_data[0x40];
+	// Image Buffer
+	IMAGEBUFFER *imageBuffer;
 } GPU;
 
 uint32_t gpu_Load32(GPU *gpu, uint32_t offset);

@@ -102,8 +102,7 @@ uint8_t load_Byte(CPU *cpu, uint32_t offset) {
 
 		// Expansion 1
 		case EXPANSION_1_OFFSET ... EXPANSION_1_OFFSET + EXPANSION_1_SIZE:
-			// Unimplemented
-			value = expansion1_LoadInt(cpu, new_offset - EXPANSION_1_OFFSET);
+			value = expansion1_LoadByte(cpu, new_offset - EXPANSION_1_OFFSET);
 			break;
 
 		// RAM
@@ -112,6 +111,7 @@ uint8_t load_Byte(CPU *cpu, uint32_t offset) {
 			break;
 
 		case CDROM_OFFSET ... CDROM_OFFSET + CDROM_SIZE:
+			value = cdrom_LoadByte(cpu->devices->cdrom, new_offset - CDROM_OFFSET);
 			break;
 
 		default:
@@ -242,6 +242,11 @@ void store_Byte(CPU *cpu, uint32_t offset, uint8_t value) {
 		// RAM
 		case RAM_OFFSET ... RAM_OFFSET + RAM_SIZE:
 			ram_StoreByte(cpu->devices->ram, new_offset, value);
+			break;
+
+		// CDROM
+		case CDROM_OFFSET ... CDROM_OFFSET + CDROM_SIZE:
+			value = cdrom_LoadByte(cpu->devices->cdrom, new_offset - CDROM_OFFSET);
 			break;
 
 		default:

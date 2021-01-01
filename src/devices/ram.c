@@ -9,16 +9,11 @@
 
 ExeFile *ram_LoadEXE(RAM *ram, char *path) {
 	char buffer[0x10];
-	uint32_t length = 0;
 	FILE *file = fopen(path, "rb");
 	if (file == NULL) {
 		log_Error("Failed to load EXE, file not found.");
 		return NULL;
 	}
-
-	fseek(file, 0, SEEK_END);
-	length = ftell(file);
-	fseek(file, 0, SEEK_SET);
 
 	// Check header
 	fread(buffer, 1, 0x10, file);
@@ -61,7 +56,7 @@ ExeFile *ram_LoadEXE(RAM *ram, char *path) {
 	// Marker unchecked, TODO?
 
 	fseek(file, 0x800, SEEK_SET);
-	fread(ram->data + mask_region(exe->ram_destination), 1, length - 0x800, file);
+	fread(ram->data + mask_region(exe->ram_destination), 1, exe->file_size, file);
 
 	return exe;
 }

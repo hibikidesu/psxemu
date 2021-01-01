@@ -12,7 +12,7 @@
 // Log file read access (unimplemented)
 #undef HOOK_FILE_OPEN
 // Sideload EXE's without entering boot/cdrom load
-#undef HOOK_FASTBOOT
+#undef HOOK_SIDELOAD
 
 //
 // Hook functions
@@ -27,6 +27,6 @@ void cpuHook_FileOpen(CPU *cpu);
 void cpuHook_SystemErrorUnresolvedException(CPU *cpu);
 // Loads an .exe into ram and executes it without needing to load from
 // CDROM and without copy protection.
-void cpuHook_FastBoot(CPU *cpu);
+void cpuHook_SideLoad(CPU *cpu);
 
 #endif

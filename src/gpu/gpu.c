@@ -3,6 +3,7 @@
 #include <string.h>
 #include "gpu.h"
 #include "commandbuffer.h"
+#include "imagebuffer.h"
 #include "renderer.h"
 #include "../cpu/cpu.h"
 #include "../utils/logger.h"
@@ -131,6 +132,7 @@ GPU *gpu_Create() {
 	gpu->field = fieldTop;	
 	gpu->instruction = 0;
 	gpu->gp0_cmd = commandBuffer_Create();
+	gpu->imageBuffer = imageBuffer_Create();
 	gpu->gp0_words_remaining = 0;
 	gpu->gp0_mode = Command;
 	gpu_Reset(gpu);
@@ -225,12 +227,16 @@ void gp0_QuadMonoOpaque(GPU *gpu) {
 }
 
 void gp0_ClearCache(GPU *gpu) {
-	memset(gpu->vram_data, 0, sizeof(gpu->vram_data));
+	
 }
 
 void gp0_ImageLoad(GPU *gpu) {
-	// Get image resolution
+	// Get image resolution and position
+	uint32_t pos = commandBuffer_GetValue(gpu->gp0_cmd, 1);
 	uint32_t res = commandBuffer_GetValue(gpu->gp0_cmd, 2);
+
+	uint16_t x = (uint16_t)pos;
+	uint16_t y = (uint16_t)(pos >> 16);
 
 	uint32_t width = res & 0xffff;
 	uint32_t height = res >> 16;
@@ -240,6 +246,11 @@ void gp0_ImageLoad(GPU *gpu) {
 
 	gpu->gp0_words_remaining = size / 2;
 	gpu->gp0_mode = ImageLoad;
+
+	// Reset if must
+	if (gpu->gp0_words_remaining > 0) {
+		imageBuffer_Reset(gpu->imageBuffer, x, y, width, height);
+	}
 }
 
 void gp0_ImageStore(GPU *gpu) {
@@ -462,8 +473,9 @@ void gpu_HandleGP0(GPU *gpu, uint32_t value) {
 			break;
 		// Copy to VRAM
 		case ImageLoad:
+			imageBuffer_Store(gpu->imageBuffer, value);
 			if (gpu->gp0_words_remaining == 0) {
-				// Load DONE
+				renderer_LoadImage(gpu->imageBuffer);
 				gpu->gp0_mode = Command;
 			}
 			break;

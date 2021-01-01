@@ -17,7 +17,7 @@
 void expansion2_StoreByte(CPU *cpu, uint32_t offset, uint8_t value);
 
 // Expansion 1
-uint32_t expansion1_LoadInt(CPU *cpu, uint32_t offset);
+uint8_t expansion1_LoadByte(CPU *cpu, uint32_t offset);
 void expansion1_StoreInt(CPU *cpu, uint32_t offset, uint32_t value);
 
 #endif

@@ -16,8 +16,8 @@ void expansion2_StoreByte(CPU *cpu, uint32_t offset, uint8_t value) {
 	}
 }
 
-uint32_t expansion1_LoadInt(CPU *cpu, uint32_t offset) {
-	uint32_t value = 0;
+uint8_t expansion1_LoadByte(CPU *cpu, uint32_t offset) {
+	uint8_t value = 0;
 	switch (offset) {
 		// Pre-Boot ID ("Licensed by Sony Computer Entertainment Inc.")
 		// Not sure what to do with it, leaving blank

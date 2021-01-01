@@ -5,9 +5,34 @@
 #include <math.h>
 #include <SDL2/SDL_gpu.h>
 #include "renderer.h"
+#include "imagebuffer.h"
 #include "../utils/logger.h"
 
 static GPU_Target *g_Screen = NULL;
+static GPU_Image *g_Image = NULL;
+static SDL_Surface *g_TempSurface = NULL;
+
+void renderer_GenerateSurface(IMAGEBUFFER *imageBuffer) {
+	if (g_TempSurface != NULL) {
+		SDL_FreeSurface(g_TempSurface);
+	}
+	g_TempSurface = SDL_CreateRGBSurfaceFrom((uint8_t*)imageBuffer->buffer, 
+											 1024,
+											 512,
+											 16,
+											 sizeof(uint16_t) * 1024,
+											 0x1F, 0x3E0, 0x7c00, 0);
+	
+}
+
+void renderer_LoadImage(IMAGEBUFFER *imageBuffer) {
+	// Free if already exists
+	if (g_Image != NULL) {
+		GPU_FreeImage(g_Image);
+	}
+	renderer_GenerateSurface(imageBuffer);
+	g_Image = GPU_CopyImageFromSurface(g_TempSurface);
+}
 
 void renderer_DrawQuad(RendererPosition *positions, RendererColor *colors) {
 	// vertices * (x, y + r, g, b, a)
@@ -124,6 +149,7 @@ RendererPosition renderer_GetPositionFromGP0(uint32_t value) {
 }
 
 void renderer_Update() {
+	GPU_Blit(g_Image, NULL, g_Screen, 0, 0);
 	GPU_Flip(g_Screen);
 	GPU_Clear(g_Screen);
 }
@@ -135,9 +161,13 @@ void renderer_Init() {
 		log_Error("Failed to init sdl-gpu: %s", SDL_GetError());
 		exit(1);
 	}
+
+	// g_Image = GPU_CreateImage(64, 256, GPU_FORMAT_RGBA);
 }
 
 void renderer_Destroy() {
+	SDL_FreeSurface(g_TempSurface);
+	GPU_FreeImage(g_Image);
 	GPU_Quit();
 	SDL_Quit();
 }

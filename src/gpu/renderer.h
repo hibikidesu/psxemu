@@ -2,6 +2,7 @@
 #define PSX_RENDERER
 
 #include <stdint.h>
+#include "imagebuffer.h"
 
 // Pos in VRAM
 typedef struct {
@@ -15,6 +16,8 @@ typedef struct {
 	uint8_t b;
 } RendererColor;
 
+void renderer_GenerateSurface(IMAGEBUFFER *imageBuffer);
+void renderer_LoadImage(IMAGEBUFFER *imageBuffer);
 void renderer_DrawRect(RendererPosition *position, RendererColor color, uint8_t alpha);
 void renderer_DrawQuad(RendererPosition *positions, RendererColor *colors);
 void renderer_DrawTriangle(RendererPosition *positions, RendererColor *colors);
