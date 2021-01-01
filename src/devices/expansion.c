@@ -16,6 +16,11 @@ void expansion2_StoreByte(CPU *cpu, uint32_t offset, uint8_t value) {
 	}
 }
 
+uint32_t expansion1_LoadInt(CPU *cpu, uint32_t offset) {
+	log_Warn("Unimplemented expansion 1 load int at 0x%X (0x%X)", offset, offset + EXPANSION_1_OFFSET);
+	return 0;
+}
+
 void expansion1_StoreInt(CPU *cpu, uint32_t offset, uint32_t value) {
 	switch (offset) {
 		// If its a bad expansion
@@ -25,7 +30,7 @@ void expansion1_StoreInt(CPU *cpu, uint32_t offset, uint32_t value) {
 			exit(1);
 			break;
 		default:
-			log_Error("%s Unknown Expansion 1 Offset 0x%X", __FUNCTION__, offset);
+			log_Error("%s Unknown Expansion 1 Offset 0x%X (0x%X)", __FUNCTION__, offset, offset + EXPANSION_1_OFFSET);
 			exit(1);
 			break;
 	}

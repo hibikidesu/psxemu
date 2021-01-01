@@ -11,10 +11,6 @@
 #define RAM_CONFIG  0x1F801060
 #define RAM_CONFIG_SIZE 4
 
-// Sound Processing Unit
-#define SPU_OFFSET 0x1F801C00
-#define SPU_SIZE 640
-
 // Interrupt Registers
 #define IRQ_CONTROL_OFFSET 0x1F801070
 #define IRQ_CONTROL_SIZE 8

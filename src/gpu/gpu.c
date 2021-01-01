@@ -382,6 +382,9 @@ void gp0_RunFunction(GPU *gpu) {
 		case GP0_QUADTEXBLENDOPAQUE:
 			gp0_QuadTextureBlendOpaque(gpu);
 			break;
+		case GP0_FILLRECT:
+			gp0_FillRectangle(gpu);
+			break;
 		default:
 			log_Error("Unknown GP0 opcode 0x%X", gpu->instruction);
 			exit(1);
@@ -437,6 +440,9 @@ void gpu_HandleGP0(GPU *gpu, uint32_t value) {
 				break;
 			case GP0_QUADTEXBLENDOPAQUE:
 				gpu->gp0_words_remaining = 9;
+				break;
+			case GP0_FILLRECT:
+				gpu->gp0_words_remaining = 3;
 				break;
 			default:
 				log_Error("Unknown GP0 opcode 0x%X, 0x%X", gpu->instruction, value);

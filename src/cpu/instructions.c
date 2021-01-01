@@ -10,6 +10,7 @@
 #include "../devices/expansion.h"
 #include "../devices/scratchpad.h"
 #include "../gpu/gpu.h"
+#include "../spu/spu.h"
 #include "../utils/logger.h"
 
 //
@@ -96,20 +97,17 @@ uint8_t load_Byte(CPU *cpu, uint32_t offset) {
 		// Load from bios
 		case BIOS_OFFSET ... BIOS_OFFSET + BIOS_SIZE:
 			value = bios_LoadByte(cpu->devices->bios, new_offset);
-			// log_Debug("Read byte 0x%X from 0x%X (BIOS)", value, new_offset);
 			break;
 
 		// Expansion 1
 		case EXPANSION_1_OFFSET ... EXPANSION_1_OFFSET + EXPANSION_1_SIZE:
 			// Unimplemented
-			value = 0xff;
-			// log_Debug("Unimplemented Expansion 1 Read");
+			value = expansion1_LoadInt(cpu, new_offset - EXPANSION_1_OFFSET);
 			break;
 
 		// RAM
 		case RAM_OFFSET ... RAM_OFFSET + RAM_SIZE:
 			value = ram_LoadByte(cpu->devices->ram, new_offset);
-			// log_Debug("Read byte 0x%X from 0x%X (RAM)", value, new_offset);
 			break;
 
 		default:
