@@ -4,7 +4,7 @@
 #include "cpu.h"
 
 //
-// Debug hooks
+// Hooks
 //
 
 // Debug prints
@@ -14,9 +14,19 @@
 // Sideload EXE's without entering boot/cdrom load
 #define HOOK_FASTBOOT
 
+//
 // Hook functions
+//
+
+// Hooks to putchar() and stores it in memory until a newline is hit.
 void cpuHook_Putchar(CPU *cpu);
+// Hooks all file access made by the cpu.
 void cpuHook_FileOpen(CPU *cpu);
+// Hooks SystemErrorUnresolvedException and causes the emulator to crash
+// as it will hardlock if left unhooked.
 void cpuHook_SystemErrorUnresolvedException(CPU *cpu);
+// Loads an .exe into ram and executes it without needing to load from
+// CDROM and without copy protection.
+void cpuHook_FastBoot(CPU *cpu);
 
 #endif

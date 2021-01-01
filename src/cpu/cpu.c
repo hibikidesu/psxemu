@@ -90,6 +90,7 @@ void cpu_Hooks(CPU *cpu) {
 			cpuHook_SystemErrorUnresolvedException(cpu);
 			break;
 		case 0x30000:
+			cpuHook_FastBoot(cpu);
 			break;
 		default:
 			break;

@@ -3,6 +3,8 @@
 #include <stdint.h>
 #include "hooks.h"
 #include "cpu.h"
+#include "../devices/ram.h"
+#include "instructions.h"
 #include "../utils/logger.h"
 
 #define CHR_BUFFER_MAX 64
