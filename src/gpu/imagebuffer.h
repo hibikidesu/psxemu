@@ -11,6 +11,7 @@ typedef struct {
 	uint16_t x, y;
 	uint16_t w, h;
 	uint32_t index;
+	uint32_t image_index;
 	// Buffer used for temp storing of single images
 	uint16_t buffer[IMAGEBUFFER_MAX];
 } IMAGEBUFFER;

@@ -10,7 +10,44 @@
 
 static GPU_Target *g_Screen = NULL;
 static GPU_Image *g_Image = NULL;
+static GPU_Image *g_DrawingTexture = NULL;
 static SDL_Surface *g_TempSurface = NULL;
+static RendererPosition g_Clut;
+static RendererPosition g_Page;
+static RendererPosition g_TexCoords;
+static uint8_t g_DrawTexture = 0;
+
+void renderer_SetDrawTexture(uint8_t value) {
+	g_DrawTexture = value;
+}
+
+void renderer_SetTexCoords(RendererPosition coords) {
+	g_TexCoords = coords;
+}
+
+void renderer_SetPage(RendererPosition page) {
+	g_Page = page;
+}
+
+void renderer_SetClut(RendererPosition clut) {
+	g_Clut = clut;
+}
+
+uint16_t get_texel_4bit(IMAGEBUFFER *imageBuffer, uint16_t x, uint16_t y, RendererPosition clut, RendererPosition page) {
+	uint16_t texel = imageBuffer->buffer[(page.x + x / 4) + (page.y + y) * 1024];
+	uint32_t index = (texel >> (x % 4) * 4) % 0xF;
+	return imageBuffer->buffer[(clut.x + index) + (clut.y) * 1024];
+}
+
+uint16_t get_texel_8bit(IMAGEBUFFER *imageBuffer, uint16_t x, uint16_t y, RendererPosition clut, RendererPosition page) {
+	uint16_t texel = imageBuffer->buffer[(x / 2 + page.x) + (y + page.y) * 1024];
+	uint32_t index = (texel >> (x % 2) * 8) % 0xFF;
+	return imageBuffer->buffer[(clut.x + index) + (clut.y) * 1024];
+}
+
+uint16_t get_texel_16bit(IMAGEBUFFER *imageBuffer, uint16_t x, uint16_t y, RendererPosition clut, RendererPosition page) {
+	return imageBuffer->buffer[(clut.x + page.x) + (clut.y + page.y) * 1024];
+}
 
 void renderer_GenerateSurface(IMAGEBUFFER *imageBuffer) {
 	if (g_TempSurface != NULL) {
@@ -22,7 +59,29 @@ void renderer_GenerateSurface(IMAGEBUFFER *imageBuffer) {
 											 16,
 											 sizeof(uint16_t) * 1024,
 											 0x1F, 0x3E0, 0x7c00, 0);
-	
+}
+
+SDL_Surface *get_cropped_pixels_tex(IMAGEBUFFER *imageBuffer) {
+	uint16_t x = g_TexCoords.x * 64;
+	uint16_t y = g_TexCoords.y * 256;
+	uint16_t w = 128;
+	uint16_t h = 128;
+	uint16_t buffer[w * h];
+	int i, bufferPos;
+
+	bufferPos = x + y * 1024;
+	for (i = 0; i < (w * h); i++) {
+		// Copy into local buffer from vram buffer
+		buffer[i] = imageBuffer->buffer[bufferPos];
+		bufferPos += 1;
+		// if current index does a line
+		if ((i % w) == 0) {
+			// Seek to next line in vram buffer
+			bufferPos = (y + (i / w) * 1024) + x;
+		}
+	}
+
+	return SDL_CreateRGBSurfaceFrom((uint8_t*)buffer, w, h, 16, sizeof(uint16_t) * w, 0x1F, 0x3E0, 0x7c00, 0);
 }
 
 void renderer_LoadImage(IMAGEBUFFER *imageBuffer) {
@@ -30,8 +89,13 @@ void renderer_LoadImage(IMAGEBUFFER *imageBuffer) {
 	if (g_Image != NULL) {
 		GPU_FreeImage(g_Image);
 	}
+	// Update VRAM
 	renderer_GenerateSurface(imageBuffer);
 	g_Image = GPU_CopyImageFromSurface(g_TempSurface);
+
+	SDL_Surface *sur = get_cropped_pixels_tex(imageBuffer);
+	g_DrawingTexture = GPU_CopyImageFromSurface(sur);
+	SDL_FreeSurface(sur);
 }
 
 void renderer_DrawQuad(RendererPosition *positions, RendererColor *colors) {
@@ -92,7 +156,12 @@ void renderer_DrawQuad(RendererPosition *positions, RendererColor *colors) {
 		(float)colors[3].b / 255,
 		1.0,
 	};
-	GPU_TriangleBatch(NULL, g_Screen, 6, values, 0, NULL, GPU_BATCH_XY_RGBA);
+	if (g_DrawTexture) {
+		GPU_TriangleBatch(g_DrawingTexture, g_Screen, 6, values, 0, NULL, GPU_BATCH_XY_RGBA);
+		g_DrawTexture = 0;
+	} else {
+		GPU_TriangleBatch(NULL, g_Screen, 6, values, 0, NULL, GPU_BATCH_XY_RGBA);
+	}
 }
 
 void renderer_DrawTriangle(RendererPosition *positions, RendererColor *colors) {
@@ -149,9 +218,14 @@ RendererPosition renderer_GetPositionFromGP0(uint32_t value) {
 }
 
 void renderer_Update() {
-	GPU_Blit(g_Image, NULL, g_Screen, 0, 0);
+	int i;
+	GPU_Blit(g_DrawingTexture, NULL, g_Screen, 512, 256);
 	GPU_Flip(g_Screen);
 	GPU_Clear(g_Screen);
+	GPU_Blit(g_Image, NULL, g_Screen, 512, 256);
+	for (i = 0; i < 3; i++) {
+		GPU_Rectangle(g_Screen, 640 + (i * 128), 0, 640 + ((i + 1) * 128), 128, (SDL_Color){255, 0, 255, 255});
+	}
 }
 
 void renderer_Init() {
@@ -161,11 +235,10 @@ void renderer_Init() {
 		log_Error("Failed to init sdl-gpu: %s", SDL_GetError());
 		exit(1);
 	}
-
-	// g_Image = GPU_CreateImage(64, 256, GPU_FORMAT_RGBA);
 }
 
 void renderer_Destroy() {
+	GPU_FreeImage(g_DrawingTexture);
 	SDL_FreeSurface(g_TempSurface);
 	GPU_FreeImage(g_Image);
 	GPU_Quit();

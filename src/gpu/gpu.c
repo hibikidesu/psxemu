@@ -290,12 +290,33 @@ void gp0_TriangleShadeOpaque(GPU *gpu) {
 void gp0_QuadTextureBlendOpaque(GPU *gpu) {
 	RendererPosition positions[4];
 	RendererColor colors[4];
+	RendererPosition textcoords[4];
+	RendererPosition clut;
+	RendererPosition page;
+	RendererPosition tex_coords;
 	int i;
 
+	log_Debug("---");
 	for (i = 0; i < 4; i++) {
 		positions[i] = renderer_GetPositionFromGP0(commandBuffer_GetValue(gpu->gp0_cmd, 1 + (i * 2)));
 		colors[i] = (RendererColor){255, 0, 255};
+		textcoords[i] = renderer_GetPositionFromGP0(commandBuffer_GetValue(gpu->gp0_cmd, 2 + (i * 2)));
 	}
+
+	clut.x = (uint8_t)textcoords[0].y;
+	clut.y = (uint8_t)(textcoords[0].y >> 8);
+	log_Debug("Texcoord1: 0x%04X Palette: (X: %04u Y: %04u)", textcoords[0].x, clut.x, clut.y);
+	page.x = (uint8_t)textcoords[1].y;
+	page.y = (uint8_t)(textcoords[1].y >> 8);
+	log_Debug("Texcoord2: 0x%04X Texpage: (X: %04u Y: %04u)", textcoords[1].x, page.x, page.y);
+	tex_coords.x = (uint8_t)textcoords[2].y;
+	tex_coords.y = (uint8_t)(textcoords[2].y >> 8);
+
+	renderer_SetClut(clut);
+	renderer_SetPage(page);
+	renderer_SetTexCoords(tex_coords);
+	renderer_SetDrawTexture(1);
+
 	renderer_DrawQuad(positions, colors);
 }
 
