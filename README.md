@@ -5,8 +5,15 @@ attempt at a psx emulator to better understand lower level stuff smh
 - Entire CPU
 - RAM Reads/Writes
 - GPU Commands
+- VRAM Buffer
+
+# Current Progress
+![Boot](https://i.imgur.com/apaZC1t.png)
 
 # TODO
+- Texture Loading
+- Controls
+- Interrupts
 - Timers
 - Expansion Slots
 - Sound Processing Unit
