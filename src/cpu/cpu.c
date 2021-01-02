@@ -88,6 +88,7 @@ void cpu_Hooks(CPU *cpu) {
 			cpuHook_Putchar(cpu);
 			cpuHook_FileOpen(cpu);
 			cpuHook_SystemErrorUnresolvedException(cpu);
+			cpuHook_SystemErrorExit(cpu);
 			break;
 		case 0x30000:
 			cpuHook_SideLoad(cpu);

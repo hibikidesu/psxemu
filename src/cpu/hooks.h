@@ -28,5 +28,7 @@ void cpuHook_SystemErrorUnresolvedException(CPU *cpu);
 // Loads an .exe into ram and executes it without needing to load from
 // CDROM and without copy protection.
 void cpuHook_SideLoad(CPU *cpu);
+// Logs when a program is jumping to itself causing it to hang.
+void cpuHook_SystemErrorExit(CPU *cpu);
 
 #endif

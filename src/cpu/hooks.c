@@ -60,8 +60,7 @@ void cpuHook_FileOpen(CPU *cpu) {
 }
 
 void cpuHook_SystemErrorUnresolvedException(CPU *cpu) {
-	switch (cpu_GetRegister(cpu, 9))
-	{
+	switch (cpu_GetRegister(cpu, 9)) {
 		case 0x40:
 			log_Error("SystemErrorUnresolvedException");
 			exit(1);
@@ -91,4 +90,15 @@ void cpuHook_SideLoad(CPU *cpu) {
 		ram_Dump(cpu->devices->ram, "ram.bin");
 	}
 #endif
+}
+
+void cpuHook_SystemErrorExit(CPU *cpu) {
+	switch (cpu_GetRegister(cpu, 9)) {
+		case 0x40:
+			log_Error("SystemErrorExit");
+			exit(1);
+			break;
+		default:
+			break;
+	}
 }
