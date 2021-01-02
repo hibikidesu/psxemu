@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
+#include <assert.h>
 #include <math.h>
 #include <SDL2/SDL_gpu.h>
 #include "renderer.h"
@@ -62,8 +63,8 @@ void renderer_GenerateSurface(IMAGEBUFFER *imageBuffer) {
 }
 
 SDL_Surface *get_cropped_pixels_tex(IMAGEBUFFER *imageBuffer) {
-	uint16_t x = g_TexCoords.x * 64;
-	uint16_t y = g_TexCoords.y * 256;
+	uint16_t x = g_Page.x * 64;
+	uint16_t y = g_Page.y * 256;
 	uint16_t w = 128;
 	uint16_t h = 128;
 	uint16_t buffer[w * h];
@@ -71,13 +72,14 @@ SDL_Surface *get_cropped_pixels_tex(IMAGEBUFFER *imageBuffer) {
 
 	bufferPos = x + y * 1024;
 	for (i = 0; i < (w * h); i++) {
+		assert(i <= w * h);
 		// Copy into local buffer from vram buffer
 		buffer[i] = imageBuffer->buffer[bufferPos];
 		bufferPos += 1;
 		// if current index does a line
 		if ((i % w) == 0) {
 			// Seek to next line in vram buffer
-			bufferPos = (y + (i / w) * 1024) + x;
+			bufferPos = ((y + (i / w)) * 1024) + x;
 		}
 	}
 
@@ -100,7 +102,7 @@ void renderer_LoadImage(IMAGEBUFFER *imageBuffer) {
 
 void renderer_DrawQuad(RendererPosition *positions, RendererColor *colors) {
 	// vertices * (x, y + r, g, b, a)
-	float values[6 * (2 + 4)] = {
+			float values[6 * (2 + 4)] = {
 		// 1st Position
 		// X, Y
 		(float)positions[0].x,
@@ -156,7 +158,10 @@ void renderer_DrawQuad(RendererPosition *positions, RendererColor *colors) {
 		(float)colors[3].b / 255,
 		1.0,
 	};
+
 	if (g_DrawTexture) {
+		GPU_Rect rect = GPU_MakeRect((float)g_Page.x * 64.f, (float)g_Page.x * 0.f, 128.f, 128.f);
+		GPU_BlitScale(g_Image, &rect, g_Screen, (float)positions[0].x, (float)positions[0].y, (float)g_Page.x * 64.f / ((float)positions[1].x - (float)positions[0].x), 1.0f);
 		GPU_TriangleBatch(g_DrawingTexture, g_Screen, 6, values, 0, NULL, GPU_BATCH_XY_RGBA);
 		g_DrawTexture = 0;
 	} else {
@@ -219,7 +224,7 @@ RendererPosition renderer_GetPositionFromGP0(uint32_t value) {
 
 void renderer_Update() {
 	int i;
-	GPU_Blit(g_DrawingTexture, NULL, g_Screen, 512, 256);
+	// GPU_Blit(g_DrawingTexture, NULL, g_Screen, 512, 256);
 	GPU_Flip(g_Screen);
 	GPU_Clear(g_Screen);
 	GPU_Blit(g_Image, NULL, g_Screen, 512, 256);
@@ -235,6 +240,8 @@ void renderer_Init() {
 		log_Error("Failed to init sdl-gpu: %s", SDL_GetError());
 		exit(1);
 	}
+
+	GPU_SetShapeBlending(1);
 }
 
 void renderer_Destroy() {
