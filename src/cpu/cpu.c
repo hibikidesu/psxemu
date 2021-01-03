@@ -11,6 +11,7 @@
 #include "../devices/ram.h"
 #include "../utils/logger.h"
 #include "../utils/ansi.h"
+#include "../gpu/debugger.h"
 #include "coprocessors/cop0.h"
 #include "coprocessors/cop1.h"
 #include "coprocessors/cop2.h"
@@ -37,6 +38,11 @@ void cpu_HandleEvents(CPU *cpu) {
 		switch (event.type) {
 			case SDL_QUIT:
 				cpu->running = false;
+				break;
+			case SDL_KEYDOWN:
+				if (event.key.keysym.sym == SDLK_TAB) {
+					gpudebugger_ToggleDebugger();
+				}
 				break;
 			default:
 				break;

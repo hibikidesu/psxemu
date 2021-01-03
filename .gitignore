@@ -8,3 +8,5 @@ ram.bin
 *.bin
 *.cue
 *.psx
+cimgui/
+cimgui/imgui/

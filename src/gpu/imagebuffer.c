@@ -6,6 +6,11 @@
 #include "imagebuffer.h"
 #include "../utils/logger.h"
 
+uint16_t imageBuffer_Read(IMAGEBUFFER *imageBuffer, uint32_t x, uint32_t y) {
+	assert(x * y <= IMAGEBUFFER_MAX);
+	return imageBuffer->buffer[(y * 1024) + x];
+}
+
 void imageBuffer_IncrIndex(IMAGEBUFFER *imageBuffer) {
 	imageBuffer->index += 1;
 	imageBuffer->image_index += 1;

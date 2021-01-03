@@ -14,10 +14,35 @@ static GPU_Target *g_Screen = NULL;
 static GPU_Image *g_Image = NULL;
 static GPU_Image *g_DrawingTexture = NULL;
 static SDL_Surface *g_TempSurface = NULL;
-static RendererPosition g_Clut;
-static RendererPosition g_Page;
 static RendererPosition g_TexCoords;
+static RendererPosition g_PaletteCords;
 static uint8_t g_DrawTexture = 0;
+
+RendererColor uint16_to_color(uint16_t value) {
+	RendererColor color;
+	color.r = (value << 3) & 0xf8;
+	color.g = (value >> 2) & 0xf8;
+	color.b = (value >> 7) & 0xf8;
+	return color;
+}
+
+RendererColor get_color_16(IMAGEBUFFER *imageBuffer, uint32_t x, uint32_t y) {
+	return uint16_to_color(imageBuffer_Read(imageBuffer, g_TexCoords.x + x, g_TexCoords.y + y));
+}
+
+RendererColor get_color_8(IMAGEBUFFER *imageBuffer, uint32_t x, uint32_t y) {
+	uint16_t texel = imageBuffer_Read(imageBuffer, g_TexCoords.x + x / 2, g_TexCoords.y + y);
+	int index = (texel >> (x & 1) * 8) & 255;
+	uint16_t pixel = imageBuffer_Read(imageBuffer, g_TexCoords.x + index, g_TexCoords.y);
+	return uint16_to_color(pixel);
+}
+
+RendererColor get_color_4(IMAGEBUFFER *imageBuffer, uint32_t x, uint32_t y) {
+	uint16_t texel = imageBuffer_Read(imageBuffer, g_TexCoords.x + x / 4, g_TexCoords.y + y);
+	int index = (texel >> (x & 3) * 4) & 15;
+	uint16_t pixel = imageBuffer_Read(imageBuffer, g_TexCoords.x + index, g_TexCoords.y);
+	return uint16_to_color(pixel);
+}
 
 void renderer_SetDrawTexture(uint8_t value) {
 	g_DrawTexture = value;
@@ -27,28 +52,8 @@ void renderer_SetTexCoords(RendererPosition coords) {
 	g_TexCoords = coords;
 }
 
-void renderer_SetPage(RendererPosition page) {
-	g_Page = page;
-}
-
-void renderer_SetClut(RendererPosition clut) {
-	g_Clut = clut;
-}
-
-uint16_t get_texel_4bit(IMAGEBUFFER *imageBuffer, uint16_t x, uint16_t y, RendererPosition clut, RendererPosition page) {
-	uint16_t texel = imageBuffer->buffer[(page.x + x / 4) + (page.y + y) * 1024];
-	uint32_t index = (texel >> (x % 4) * 4) % 0xF;
-	return imageBuffer->buffer[(clut.x + index) + (clut.y) * 1024];
-}
-
-uint16_t get_texel_8bit(IMAGEBUFFER *imageBuffer, uint16_t x, uint16_t y, RendererPosition clut, RendererPosition page) {
-	uint16_t texel = imageBuffer->buffer[(x / 2 + page.x) + (y + page.y) * 1024];
-	uint32_t index = (texel >> (x % 2) * 8) % 0xFF;
-	return imageBuffer->buffer[(clut.x + index) + (clut.y) * 1024];
-}
-
-uint16_t get_texel_16bit(IMAGEBUFFER *imageBuffer, uint16_t x, uint16_t y, RendererPosition clut, RendererPosition page) {
-	return imageBuffer->buffer[(clut.x + page.x) + (clut.y + page.y) * 1024];
+void renderer_SetPaletteCoords(RendererPosition coords) {
+	g_PaletteCords = coords;
 }
 
 void renderer_GenerateSurface(IMAGEBUFFER *imageBuffer) {
@@ -61,30 +66,6 @@ void renderer_GenerateSurface(IMAGEBUFFER *imageBuffer) {
 											 16,
 											 sizeof(uint16_t) * 1024,
 											 0x1F, 0x3E0, 0x7c00, 0);
-}
-
-SDL_Surface *get_cropped_pixels_tex(IMAGEBUFFER *imageBuffer) {
-	uint16_t x = g_Page.x * 64;
-	uint16_t y = g_Page.y * 256;
-	uint16_t w = 128;
-	uint16_t h = 128;
-	uint16_t buffer[w * h];
-	int i, bufferPos;
-
-	bufferPos = x + y * 1024;
-	for (i = 0; i < (w * h); i++) {
-		assert(i <= w * h);
-		// Copy into local buffer from vram buffer
-		buffer[i] = imageBuffer->buffer[bufferPos];
-		bufferPos += 1;
-		// if current index does a line
-		if ((i % w) == 0) {
-			// Seek to next line in vram buffer
-			bufferPos = ((y + (i / w)) * 1024) + x;
-		}
-	}
-
-	return SDL_CreateRGBSurfaceFrom((uint8_t*)buffer, w, h, 16, sizeof(uint16_t) * w, 0x1F, 0x3E0, 0x7c00, 0);
 }
 
 void renderer_LoadImage(IMAGEBUFFER *imageBuffer) {
@@ -161,8 +142,6 @@ void renderer_DrawQuad(RendererPosition *positions, RendererColor *colors) {
 	};
 
 	if (g_DrawTexture) {
-		GPU_Rect rect = GPU_MakeRect((float)g_Page.x * 64.f, (float)g_Page.x * 0.f, 128.f, 128.f);
-		GPU_BlitScale(g_Image, &rect, g_Screen, (float)positions[0].x, (float)positions[0].y, (float)g_Page.x * 64.f / ((float)positions[1].x - (float)positions[0].x), 1.0f);
 		GPU_TriangleBatch(g_DrawingTexture, g_Screen, 6, values, 0, NULL, GPU_BATCH_XY_RGBA);
 		g_DrawTexture = 0;
 	} else {
@@ -226,6 +205,7 @@ RendererPosition renderer_GetPositionFromGP0(uint32_t value) {
 void renderer_Update() {
 	int i;
 	// GPU_Blit(g_DrawingTexture, NULL, g_Screen, 512, 256);
+	gpudebugger_RenderFrame(g_Screen);
 	GPU_Flip(g_Screen);
 	GPU_Clear(g_Screen);
 	GPU_Blit(g_Image, NULL, g_Screen, 512, 256);

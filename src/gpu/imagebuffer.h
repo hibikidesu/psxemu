@@ -16,6 +16,7 @@ typedef struct {
 	uint16_t buffer[IMAGEBUFFER_MAX];
 } IMAGEBUFFER;
 
+uint16_t imageBuffer_Read(IMAGEBUFFER *imageBuffer, uint32_t x, uint32_t y);
 void imageBuffer_Store(IMAGEBUFFER *imageBuffer, uint32_t word);
 void imageBuffer_Reset(IMAGEBUFFER *imageBuffer, uint16_t x, uint16_t y, uint16_t w, uint16_t h);
 IMAGEBUFFER *imageBuffer_Create();

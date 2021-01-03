@@ -312,7 +312,6 @@ void gp0_QuadTextureBlendOpaque(GPU *gpu) {
 	tex_coords.x = (uint8_t)textcoords[2].y;
 	tex_coords.y = (uint8_t)(textcoords[2].y >> 8);
 
-	renderer_SetClut(clut);
 	renderer_SetPage(page);
 	renderer_SetTexCoords(tex_coords);
 	renderer_SetDrawTexture(1);

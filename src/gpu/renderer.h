@@ -18,8 +18,7 @@ typedef struct {
 
 void renderer_SetDrawTexture(uint8_t value);
 void renderer_SetTexCoords(RendererPosition coords);
-void renderer_SetPage(RendererPosition page);
-void renderer_SetClut(RendererPosition clut);
+void renderer_SetPaletteCoords(RendererPosition coords);
 uint16_t get_texel_4bit(IMAGEBUFFER *imageBuffer, uint16_t x, uint16_t y, RendererPosition clut, RendererPosition page);
 uint16_t get_texel_8bit(IMAGEBUFFER *imageBuffer, uint16_t x, uint16_t y, RendererPosition clut, RendererPosition page);
 uint16_t get_texel_16bit(IMAGEBUFFER *imageBuffer, uint16_t x, uint16_t y, RendererPosition clut, RendererPosition page);
