@@ -7,6 +7,7 @@
 #include <SDL2/SDL_gpu.h>
 #include "renderer.h"
 #include "imagebuffer.h"
+#include "debugger.h"
 #include "../utils/logger.h"
 
 static GPU_Target *g_Screen = NULL;
