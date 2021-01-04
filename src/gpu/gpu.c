@@ -299,7 +299,7 @@ void gp0_QuadTextureBlendOpaque(GPU *gpu) {
 	log_Debug("---");
 	for (i = 0; i < 4; i++) {
 		positions[i] = renderer_GetPositionFromGP0(commandBuffer_GetValue(gpu->gp0_cmd, 1 + (i * 2)));
-		colors[i] = (RendererColor){255, 0, 255};
+		colors[i] = (RendererColor){255, 255, 255};
 		textcoords[i] = renderer_GetPositionFromGP0(commandBuffer_GetValue(gpu->gp0_cmd, 2 + (i * 2)));
 	}
 
@@ -312,7 +312,7 @@ void gp0_QuadTextureBlendOpaque(GPU *gpu) {
 	tex_coords.x = (uint8_t)textcoords[2].y;
 	tex_coords.y = (uint8_t)(textcoords[2].y >> 8);
 
-	renderer_SetPage(page);
+	renderer_SetPaletteCoords(clut);
 	renderer_SetTexCoords(tex_coords);
 	renderer_SetDrawTexture(1);
 
