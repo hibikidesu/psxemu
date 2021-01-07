@@ -14,6 +14,7 @@
 #define EXPANSION_2_POST 0x1F802041
 
 // Expansion 2
+uint32_t expansion2_LoadInt(CPU *cpu, uint32_t offset);
 void expansion2_StoreByte(CPU *cpu, uint32_t offset, uint8_t value);
 
 // Expansion 1

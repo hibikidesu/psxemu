@@ -35,6 +35,7 @@
 #define GP1_DISPLAY_HRANGE	0x06
 #define GP1_DISPLAY_VRANGE	0x07
 #define GP1_DISPLAYMODE		0x08
+#define GP1_GPUINFO			0x10
 
 // Bits per pixel
 typedef enum {

@@ -620,6 +620,9 @@ void gpu_HandleGP1(GPU *gpu, uint32_t value) {
 		case GP1_RESETCMDBUFFER:
 			gp1_ResetCommandBuffer(gpu);
 			break;
+		case GP1_GPUINFO:
+			log_Warn("GP1 GPUINFO unimplemented");
+			break;
 		default:
 			log_Error("Unknown GP1 opcode 0x%X, 0x%X", gpu->instruction, value);
 			exit(1);

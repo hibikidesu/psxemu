@@ -97,11 +97,6 @@ uint16_t ram_LoadShort(RAM *ram, uint32_t address) {
 }
 
 uint32_t ram_LoadInt(RAM *ram, uint32_t address) {
-	if ((address % 4) != 0) {
-		log_Error("Unaligned Read of RAM 0x%X", address);
-		exit(1);
-	} 
-
 	// Check if is in range then return data from address if is.
 	if (utils_AddressInRange(address, RAM_OFFSET, RAM_SIZE)) {
 		return utils_LoadLittleEndianInt(ram->data, address - RAM_OFFSET);

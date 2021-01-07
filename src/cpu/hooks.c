@@ -7,7 +7,7 @@
 #include "instructions.h"
 #include "../utils/logger.h"
 
-#define CHR_BUFFER_MAX 64
+#define CHR_BUFFER_MAX 96
 static char CHR_BUFFER[CHR_BUFFER_MAX];
 static uint16_t CHR_BUFFER_SIZE = 0;
 
@@ -73,8 +73,8 @@ void cpuHook_SystemErrorUnresolvedException(CPU *cpu) {
 void cpuHook_SideLoad(CPU *cpu) {
 #ifdef HOOK_SIDELOAD
 	if (cpu->PC == 0x80030000) {
-		cpu->log_instructions = 1;
-		ExeFile *exe = ram_LoadEXE(cpu->devices->ram, "hello.ps-exe");
+		// cpu->log_instructions = 1;
+		ExeFile *exe = ram_LoadEXE(cpu->devices->ram, "psxtest_cpu.exe");
 		if (exe == NULL) {
 			cpu->running = false;
 			exit(1);

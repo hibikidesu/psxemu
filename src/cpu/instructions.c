@@ -101,7 +101,7 @@ uint8_t load_Byte(CPU *cpu, uint32_t offset) {
 			break;
 
 		// Expansion 1
-		case EXPANSION_1_OFFSET ... EXPANSION_1_OFFSET + EXPANSION_1_SIZE:
+		case EXPANSION_1_OFFSET ... EXPANSION_1_OFFSET + EXPANSION_1_SIZE - 1:
 			value = expansion1_LoadByte(cpu, new_offset - EXPANSION_1_OFFSET);
 			break;
 
@@ -110,8 +110,14 @@ uint8_t load_Byte(CPU *cpu, uint32_t offset) {
 			value = ram_LoadByte(cpu->devices->ram, new_offset);
 			break;
 
+		// CDROM
 		case CDROM_OFFSET ... CDROM_OFFSET + CDROM_SIZE:
 			value = cdrom_LoadByte(cpu->devices->cdrom, new_offset - CDROM_OFFSET);
+			break;
+
+		// Scratchpad
+		case SCRATCHPAD_OFFSET ... SCRATCHPAD_OFFSET + SCRATCHPAD_SIZE:
+			value = scratchpad_LoadByte(cpu->devices->scratchpad, new_offset);
 			break;
 
 		default:
@@ -146,6 +152,11 @@ uint16_t load_Short(CPU *cpu, uint32_t offset) {
 			value = 0x0;
 			break;
 
+		// Scratchpad
+		case SCRATCHPAD_OFFSET ... SCRATCHPAD_OFFSET + SCRATCHPAD_SIZE:
+			value = scratchpad_LoadShort(cpu->devices->scratchpad, new_offset);
+			break;
+
 		default:
 			log_Error("%s Unkown memory read address 0x%X", 
 				__FUNCTION__, new_offset);
@@ -160,10 +171,6 @@ uint16_t load_Short(CPU *cpu, uint32_t offset) {
 uint32_t load_Int(CPU *cpu, uint32_t offset) {
 	uint32_t value;
 	uint32_t new_offset;
-	if ((offset % 4) != 0) {
-		log_Error("Unaligned Store 0x%X", offset);
-		exit(1);
-	}
 
 	new_offset = mask_region(offset);
 
@@ -218,6 +225,11 @@ uint32_t load_Int(CPU *cpu, uint32_t offset) {
 			value = scratchpad_LoadInt(cpu->devices->scratchpad, offset);
 			break;
 
+		// Expansion 2
+		case EXPANSION_2_OFFSET ... EXPANSION_2_OFFSET + EXPANSION_2_SIZE:
+			value = expansion2_LoadInt(cpu, new_offset - EXPANSION_2_OFFSET);
+			break;
+
 		default:
 			log_Error("%s Unkown memory read address 0x%X", 
 				__FUNCTION__, new_offset);
@@ -246,7 +258,12 @@ void store_Byte(CPU *cpu, uint32_t offset, uint8_t value) {
 
 		// CDROM
 		case CDROM_OFFSET ... CDROM_OFFSET + CDROM_SIZE:
-			value = cdrom_LoadByte(cpu->devices->cdrom, new_offset - CDROM_OFFSET);
+			cdrom_LoadByte(cpu->devices->cdrom, new_offset - CDROM_OFFSET);
+			break;
+		
+		// Scratchpad
+		case SCRATCHPAD_OFFSET ... SCRATCHPAD_OFFSET + SCRATCHPAD_SIZE:
+			scratchpad_StoreByte(cpu->devices->scratchpad, new_offset, value);
 			break;
 
 		default:
@@ -260,10 +277,6 @@ void store_Byte(CPU *cpu, uint32_t offset, uint8_t value) {
 // Store a value as uint16
 void store_Short(CPU *cpu, uint32_t offset, uint16_t value) {
 	uint32_t new_offset;
-	if ((offset % 2) != 0) {
-		log_Error("Unaligned Store 0x%X", offset);
-		exit(1);
-	}
 
 	new_offset = mask_region(offset);
 
@@ -288,6 +301,11 @@ void store_Short(CPU *cpu, uint32_t offset, uint16_t value) {
 			log_Debug("%s Unimplemented IRQ short write", __FUNCTION__);
 			break;
 
+		// Scratchpad
+		case SCRATCHPAD_OFFSET ... SCRATCHPAD_OFFSET + SCRATCHPAD_SIZE:
+			scratchpad_StoreShort(cpu->devices->scratchpad, new_offset, value);
+			break;
+
 		default:
 			log_Error("%s Not in memory control range, Address 0x%X, Tried to store 0x%X", 
 				__FUNCTION__, new_offset, value);
@@ -299,11 +317,6 @@ void store_Short(CPU *cpu, uint32_t offset, uint16_t value) {
 // Store a value as uint32
 void store_Int(CPU *cpu, uint32_t offset, uint32_t value) {
 	uint32_t new_offset;
-	if ((offset % 4) != 0) {
-		log_Error("Unaligned Store 0x%X", offset);
-		exit(1);
-	}
-
 	new_offset = mask_region(offset);
 
 	// Check addresses
@@ -1006,7 +1019,7 @@ void instruction_Sub(CPU *cpu) {
 
 // Exclusive OR Immediate
 void instruction_Xori(CPU *cpu) {
-	uint32_t i = getISE(cpu->this_instruction);
+	uint32_t i = getI(cpu->this_instruction);
 	uint32_t t = getT(cpu->this_instruction);
 	uint32_t s = getS(cpu->this_instruction);
 	uint32_t v = cpu_GetRegister(cpu, s) ^ i;
@@ -1292,10 +1305,7 @@ void instruction_Mtc0(CPU *cpu) {
 			break;
 		// Cause register
 		case 13:
-			if (v != 0) {
-				log_Error("Unhandled COP0 register");
-				exit(1);
-			}
+			cpu->cause = v;
 			break;
 		// Breakpoint registers
 		case 3:
@@ -1324,14 +1334,33 @@ void instruction_Mfc0(CPU *cpu) {
 	uint32_t v = 0;
 
 	switch (cop_r) {
+		// JUMPDEST
+		case 6:
+			log_Warn("Unimplemented JUMPDEST");
+			break;
+		// DCIC
+		case 7:
+			log_Warn("Unimplemented DCIC");
+			break;
+		// Bad Virtual Address
+		case 8:
+			log_Warn("Unimplemented bad virtual address");
+			break;
+		// SR
 		case 12:
 			v = cpu->SR;
 			break;
+		// Cause register
 		case 13:
 			v = cpu->cause;
 			break;
+		// EPC
 		case 14:
 			v = cpu->epc;
+			break;
+		// Processor ID
+		case 15:
+			v = 0x2;
 			break;
 		default:
 			log_Error("Unknown MFC0 Register 0x%X", cop_r);

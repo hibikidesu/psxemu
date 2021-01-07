@@ -5,6 +5,17 @@
 #include "../cpu/cpu.h"
 #include "../utils/logger.h"
 
+uint32_t expansion2_LoadInt(CPU *cpu, uint32_t offset) {
+	uint32_t value = 0;
+	switch (offset) {
+		default:
+			log_Error("Unimplemented expansion 2 load int at 0x%X (0x%X)", offset, offset + EXPANSION_1_OFFSET);
+			exit(1);
+			break;
+	}
+	return value;
+}
+
 void expansion2_StoreByte(CPU *cpu, uint32_t offset, uint8_t value) {
 	switch (offset) {
 		case EXPANSION_2_POST:
@@ -24,7 +35,7 @@ uint8_t expansion1_LoadByte(CPU *cpu, uint32_t offset) {
 		case EXPANSION_1_PRE_BOOT_ID:
 			break;
 		default:
-			log_Error("Unimplemented expansion 1 load int at 0x%X (0x%X)", offset, offset + EXPANSION_1_OFFSET);
+			log_Error("Unimplemented expansion 1 load byte at 0x%X (0x%X)", offset, offset + EXPANSION_1_OFFSET);
 			exit(1);
 			break;
 	}
