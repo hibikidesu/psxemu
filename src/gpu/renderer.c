@@ -13,10 +13,13 @@
 static GPU_Target *g_Screen = NULL;
 static GPU_Image *g_Image = NULL;
 static GPU_Image *g_DrawingTexture = NULL;
+static SDL_Surface *g_TempDrawSurface = NULL;
 static SDL_Surface *g_TempSurface = NULL;
 static RendererPosition g_TexCoords;
 static RendererPosition g_PaletteCords;
+static RendererPosition g_PageCoords;
 static uint8_t g_DrawTexture = 0;
+static int g_TexDepth = 0;
 
 RendererColor uint16_to_color(uint16_t value) {
 	RendererColor color;
@@ -56,6 +59,26 @@ void renderer_SetPaletteCoords(RendererPosition coords) {
 	g_PaletteCords = coords;
 }
 
+void renderer_SetPageCoords(RendererPosition coords) {
+	g_PageCoords = coords;
+}
+
+void renderer_SetTextureDepth(int depth) {
+	switch (depth) {
+		case 0:
+			g_TexDepth = 4;
+			break;
+		case 1:
+			g_TexDepth = 8;
+			break;
+		case 2:
+			g_TexDepth = 16;
+			break;
+		default:
+			break;
+	}
+}
+
 void renderer_GenerateSurface(IMAGEBUFFER *imageBuffer) {
 	if (g_TempSurface != NULL) {
 		SDL_FreeSurface(g_TempSurface);
@@ -68,6 +91,28 @@ void renderer_GenerateSurface(IMAGEBUFFER *imageBuffer) {
 											 0x1F, 0x3E0, 0x7c00, 0);
 }
 
+void load_draw_img(IMAGEBUFFER *imageBuffer) {
+	uint16_t x_o = g_PageCoords.x * 64;
+	uint16_t y_o = g_PageCoords.y * 256;
+	uint16_t w = g_TexDepth * 8;
+	uint16_t h = g_TexDepth * 8;
+	uint16_t buffer[w * h];
+	int i = 0;
+	int x, y;
+
+	for (y = 0; y < h; y++) {
+		for (x = 0; x < w; x++) {
+			assert(i <= w * h);
+			buffer[i] = imageBuffer_Read(imageBuffer, x + x_o, y + y_o);
+			i += 1;
+		}
+	}
+
+	g_TempDrawSurface = SDL_CreateRGBSurfaceFrom((uint8_t*)buffer, w, h, 16, sizeof(uint16_t) * w, 0x1F, 0x3E0, 0x7c00, 0);
+	g_DrawingTexture = GPU_CopyImageFromSurface(g_TempDrawSurface);
+	SDL_FreeSurface(g_TempDrawSurface);
+}
+
 void renderer_LoadImage(IMAGEBUFFER *imageBuffer) {
 	// Free if already exists
 	if (g_Image != NULL) {
@@ -76,19 +121,20 @@ void renderer_LoadImage(IMAGEBUFFER *imageBuffer) {
 	// Update VRAM
 	renderer_GenerateSurface(imageBuffer);
 	g_Image = GPU_CopyImageFromSurface(g_TempSurface);
-
-	// SDL_Surface *sur = get_cropped_pixels_tex(imageBuffer);
-	// g_DrawingTexture = GPU_CopyImageFromSurface(sur);
-	// SDL_FreeSurface(sur);
 }
 
-void renderer_DrawQuad(RendererPosition *positions, RendererColor *colors) {
+void renderer_DrawQuad(IMAGEBUFFER *imageBuffer, RendererPosition *positions, RendererColor *colors) {
 	uint32_t i;
 	uint32_t n = 0;
-	float st_v[3][2] = {
+	static const float st_v1[3][2] = {
 		{0, 0},
 		{1, 0},
 		{0, 1}
+	};
+	static const float st_v2[3][2] = {
+		{1, 0},
+		{0, 1},
+		{1, 1}
 	};
 
 	if (g_DrawTexture) {
@@ -98,8 +144,8 @@ void renderer_DrawQuad(RendererPosition *positions, RendererColor *colors) {
 			values[n++] = (float)positions[i].x;
 			values[n++] = (float)positions[i].y;
 			// ST
-			values[n++] = st_v[i][0];
-			values[n++] = st_v[i][1];
+			values[n++] = st_v1[i][0];
+			values[n++] = st_v1[i][1];
 			// RGBA
 			values[n++] = (float)colors[i].r / 255;
 			values[n++] = (float)colors[i].g / 255;
@@ -111,17 +157,15 @@ void renderer_DrawQuad(RendererPosition *positions, RendererColor *colors) {
 			values[n++] = (float)positions[i].x;
 			values[n++] = (float)positions[i].y;
 			// ST
-			values[n++] = st_v[i % 3][0];
-			values[n++] = st_v[i % 3][1];
+			values[n++] = st_v2[i - 1][0];
+			values[n++] = st_v2[i - 1][1];
 			// RGBA
 			values[n++] = (float)colors[i].r / 255;
 			values[n++] = (float)colors[i].g / 255;
 			values[n++] = (float)colors[i].b / 255;
 			values[n++] = 1.0;
 		}
-		if (g_DrawingTexture == NULL) {
-			g_DrawingTexture = GPU_LoadImage("test3.png");
-		}
+		load_draw_img(imageBuffer);
 		GPU_TriangleBatch(g_DrawingTexture, g_Screen, 6, values, 0, NULL, GPU_BATCH_XY_ST_RGBA);
 		g_DrawTexture = 0;
 	} else {
@@ -229,6 +273,7 @@ void renderer_Init() {
 void renderer_Destroy() {
 	GPU_FreeImage(g_DrawingTexture);
 	SDL_FreeSurface(g_TempSurface);
+	SDL_FreeSurface(g_TempDrawSurface);
 	GPU_FreeImage(g_Image);
 	GPU_Quit();
 	SDL_Quit();

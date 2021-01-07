@@ -17,7 +17,7 @@
 #include "coprocessors/cop2.h"
 #include "coprocessors/cop3.h"
 
-const static char *debugRegisterStrings[32] = {
+static const char *debugRegisterStrings[32] = {
 	"$zero",
 	"$at",
 	"$v0", "$v1",
@@ -31,6 +31,21 @@ const static char *debugRegisterStrings[32] = {
 	"$fp",
 	"$ra"
 };
+// static const uint32_t cpu_frequency = 33868800;
+// static uint32_t instructions_done = 0;
+// static uint32_t last_time = 0;
+
+void cpu_Run(CPU *cpu) {
+	int i = 0;
+
+	cpu->running = 1;
+	while (cpu->running) {
+		for (i = 0; i < 1000000; i++) {
+			cpu_NextInstruction(cpu);
+		}
+		cpu_HandleEvents(cpu);
+	}
+}
 
 void cpu_HandleEvents(CPU *cpu) {
 	SDL_Event event;

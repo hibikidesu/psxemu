@@ -8,7 +8,7 @@ attempt at a psx emulator to better understand lower level stuff smh
 - VRAM Buffer
 
 # Current Progress
-![Boot](https://i.imgur.com/apaZC1t.png)
+![Boot](https://i.imgur.com/CAVjYo0.png)
 
 # TODO
 - Texture Loading

@@ -42,6 +42,7 @@ typedef struct {
 	bool delay_slot;
 } CPU;
 
+void cpu_Run(CPU *cpu);
 void cpu_HandleEvents(CPU *cpu);
 void cpu_DumpRegisters(CPU *cpu);
 uint32_t cpu_GetRegister(CPU *cpu, uint32_t index);

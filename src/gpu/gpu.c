@@ -223,7 +223,7 @@ void gp0_QuadMonoOpaque(GPU *gpu) {
 		colors[i] = renderer_GetColorFromGP0(commandBuffer_GetValue(gpu->gp0_cmd, 0));
 	}
 
-	renderer_DrawQuad(positions, colors);
+	renderer_DrawQuad(NULL, positions, colors);
 }
 
 void gp0_ClearCache(GPU *gpu) {
@@ -272,7 +272,7 @@ void gp0_QuadShadeOpaque(GPU *gpu) {
 		positions[i] = renderer_GetPositionFromGP0(commandBuffer_GetValue(gpu->gp0_cmd, 1 + (i * 2)));
 		colors[i] = renderer_GetColorFromGP0(commandBuffer_GetValue(gpu->gp0_cmd, i * 2));
 	}
-	renderer_DrawQuad(positions, colors);
+	renderer_DrawQuad(NULL, positions, colors);
 }
 
 void gp0_TriangleShadeOpaque(GPU *gpu) {
@@ -312,11 +312,13 @@ void gp0_QuadTextureBlendOpaque(GPU *gpu) {
 	tex_coords.x = (uint8_t)textcoords[2].y;
 	tex_coords.y = (uint8_t)(textcoords[2].y >> 8);
 
+	renderer_SetTextureDepth(gpu->texture_depth);
+	renderer_SetPageCoords(page);
 	renderer_SetPaletteCoords(clut);
 	renderer_SetTexCoords(tex_coords);
 	renderer_SetDrawTexture(1);
 
-	renderer_DrawQuad(positions, colors);
+	renderer_DrawQuad(gpu->imageBuffer, positions, colors);
 }
 
 void gp0_FillRectangle(GPU *gpu) {
