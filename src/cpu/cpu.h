@@ -40,6 +40,7 @@ typedef struct {
 	uint32_t epc;	// COP0 14 register
 	bool branch;
 	bool delay_slot;
+	bool log_instructions;
 } CPU;
 
 void cpu_Run(CPU *cpu);

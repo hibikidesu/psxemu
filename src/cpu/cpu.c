@@ -120,8 +120,10 @@ void cpu_Hooks(CPU *cpu) {
 }
 
 void cpu_ExecuteInstruction(CPU *cpu) {
-	// log_Debug("Current Instruction: 0x%08X, PC: 0x%08X, SR: 0x%08X", 
-	// 	cpu->this_instruction, cpu->PC, cpu->SR);
+	if (cpu->log_instructions) {
+		log_Debug("Current Instruction: 0x%08X, PC: 0x%08X, SR: 0x%08X", 
+			cpu->this_instruction, cpu->PC, cpu->SR);
+	}
 	// Decode instruction bits [31:26]
 	switch (cpu->this_instruction >> 26) {
 		// SPECIAL
@@ -357,6 +359,8 @@ void cpu_Reset(CPU *cpu) {
 
 	// Set instructions
 	cpu->this_instruction = 0;
+
+	cpu->log_instructions = false;
 
 	// Reset out and load registers
 	cpu_SetLoadRegisters(cpu, 0, 0);

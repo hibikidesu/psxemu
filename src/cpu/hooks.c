@@ -73,19 +73,21 @@ void cpuHook_SystemErrorUnresolvedException(CPU *cpu) {
 void cpuHook_SideLoad(CPU *cpu) {
 #ifdef HOOK_SIDELOAD
 	if (cpu->PC == 0x80030000) {
-		ExeFile *exe = ram_LoadEXE(cpu->devices->ram, "CPUADD.exe");
+		cpu->log_instructions = 1;
+		ExeFile *exe = ram_LoadEXE(cpu->devices->ram, "hello.ps-exe");
 		if (exe == NULL) {
 			cpu->running = false;
+			exit(1);
 			return;
 		}
-		cpu->PC = exe->initial_pc;
+		cpu->PC = mask_region(exe->initial_pc);
 		cpu->NEXT_PC = cpu->PC + 4;
 		log_Info("Loaded EXE PC: 0x%X, RAM: 0x%X", mask_region(exe->initial_pc), mask_region(exe->ram_destination));
 		cpu_SetRegister(cpu, 28, exe->initial_gp);
 		cpu_SetRegister(cpu, 29, exe->initial_spfp_base);
 		cpu_SetRegister(cpu, 30, exe->initial_spfp_base);
-		cpu_SetRegister(cpu, 29, exe->initial_spfp_base + exe->initial_spfp_off);
-		cpu_SetRegister(cpu, 30, exe->initial_spfp_base + exe->initial_spfp_off);
+		// cpu_SetRegister(cpu, 29, exe->initial_spfp_base + exe->initial_spfp_off);
+		// cpu_SetRegister(cpu, 30, exe->initial_spfp_base + exe->initial_spfp_off);
 		free(exe);
 		ram_Dump(cpu->devices->ram, "ram.bin");
 	}
