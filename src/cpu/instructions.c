@@ -12,6 +12,7 @@
 #include "../gpu/gpu.h"
 #include "../spu/spu.h"
 #include "../devices/cdrom.h"
+#include "../devices/joystick.h"
 #include "../utils/logger.h"
 
 //
@@ -120,6 +121,11 @@ uint8_t load_Byte(CPU *cpu, uint32_t offset) {
 			value = scratchpad_LoadByte(cpu->devices->scratchpad, new_offset);
 			break;
 
+		// Joystick
+		case JOYSTICK_OFFSET ... JOYSTICK_OFFSET + JOYSTICK_SIZE:
+			value = joystick_LoadByte(new_offset - JOYSTICK_OFFSET);
+			break;
+
 		default:
 			log_Error("%s Unkown memory read address 0x%X", 
 				__FUNCTION__, new_offset);
@@ -155,6 +161,11 @@ uint16_t load_Short(CPU *cpu, uint32_t offset) {
 		// Scratchpad
 		case SCRATCHPAD_OFFSET ... SCRATCHPAD_OFFSET + SCRATCHPAD_SIZE:
 			value = scratchpad_LoadShort(cpu->devices->scratchpad, new_offset);
+			break;
+
+		// Joystick
+		case JOYSTICK_OFFSET ... JOYSTICK_OFFSET + JOYSTICK_SIZE:
+			value = joystick_LoadShort(new_offset - JOYSTICK_OFFSET);
 			break;
 
 		default:
@@ -304,6 +315,11 @@ void store_Short(CPU *cpu, uint32_t offset, uint16_t value) {
 		// Scratchpad
 		case SCRATCHPAD_OFFSET ... SCRATCHPAD_OFFSET + SCRATCHPAD_SIZE:
 			scratchpad_StoreShort(cpu->devices->scratchpad, new_offset, value);
+			break;
+
+		// Joystick
+		case JOYSTICK_OFFSET ... JOYSTICK_OFFSET + JOYSTICK_SIZE:
+			joystick_StoreShort(new_offset - JOYSTICK_OFFSET, value);
 			break;
 
 		default:
