@@ -372,6 +372,17 @@ void gp0_Rectangle16SemiTransparentTextured(GPU *gpu) {
 	renderer_DrawRect(positions, color, 255);
 }
 
+void gp0_Rectangle1MonoOpaque(GPU *gpu) {
+	RendererPosition positions[2];
+	RendererColor color = renderer_GetColorFromGP0(commandBuffer_GetValue(gpu->gp0_cmd, 0));
+
+	positions[0] = renderer_GetPositionFromGP0(commandBuffer_GetValue(gpu->gp0_cmd, 1));
+	positions[1].x = positions[0].x + 1;
+	positions[1].y = positions[1].y + 1;
+
+	renderer_DrawRect(positions, color, 255);
+}
+
 void gp0_RunFunction(GPU *gpu) {
 	switch (gpu->gp0_ins) {
 		case GP0_NOP:
@@ -417,6 +428,9 @@ void gp0_RunFunction(GPU *gpu) {
 			break;
 		case GP0_FILLRECT:
 			gp0_FillRectangle(gpu);
+			break;
+		case GP0_RECT1MONOOPAQUE:
+			gp0_Rectangle1MonoOpaque(gpu);
 			break;
 		default:
 			log_Error("Unknown GP0 opcode 0x%X", gpu->instruction);
@@ -476,6 +490,9 @@ void gpu_HandleGP0(GPU *gpu, uint32_t value) {
 				break;
 			case GP0_FILLRECT:
 				gpu->gp0_words_remaining = 3;
+				break;
+			case GP0_RECT1MONOOPAQUE:
+				gpu->gp0_words_remaining = 2;
 				break;
 			default:
 				log_Error("Unknown GP0 opcode 0x%X, 0x%X", gpu->instruction, value);
