@@ -6,12 +6,12 @@ attempt at a psx emulator to better understand lower level stuff smh
 - RAM Reads/Writes
 - GPU Commands
 - VRAM Buffer
+- Texture Loading
 
 # Current Progress
 ![Boot](https://i.imgur.com/CAVjYo0.png)
 
 # TODO
-- Texture Loading
 - Controls
 - Interrupts
 - Timers
